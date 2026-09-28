@@ -4,9 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SettingItem } from '../SettingItem';
-import { useSettingsPremium } from '../../../hooks/useSettingsPremium';
 import { useT } from '../../../i18n/localization';
 import {
   SettingItem as SettingItemType,
@@ -32,9 +30,6 @@ interface ScriptingAdsSectionProps {
     disabledItem: any;
     disabledText: any;
     chevron: any;
-    watchAdButton?: any;
-    watchAdButtonDisabled?: any;
-    watchAdButtonText?: any;
   };
   settingIcons: Record<string, SettingIcon | undefined>;
   onShowScripting: () => void;
@@ -50,20 +45,6 @@ export const ScriptingAdsSection: React.FC<ScriptingAdsSectionProps> = ({
 }) => {
   const t = useT();
   const tags = 'screen:settings,file:ScriptingAdsSection.tsx,feature:settings';
-  const {
-    hasNoAds,
-    hasScriptingPro,
-    isSupporter,
-    watchAdButtonEnabledForPremium,
-    showWatchAdButton,
-    adReady,
-    adLoading,
-    adCooldown,
-    cooldownSeconds,
-    showingAd,
-    setWatchAdButtonEnabledForPremium,
-    handleWatchAd,
-  } = useSettingsPremium();
 
   const sectionData: SettingItemType[] = [
     {
@@ -103,82 +84,7 @@ export const ScriptingAdsSection: React.FC<ScriptingAdsSectionProps> = ({
       ],
       onPress: onShowScriptingHelp,
     },
-    {
-      id: 'watch-ad-button-premium',
-      title: t('Show Watch Ad Button (Premium)', { _tags: tags }),
-      description:
-        hasNoAds || hasScriptingPro || isSupporter
-          ? t(
-              'Enable watch ad button to support the project (you have premium plan)',
-              { _tags: tags },
-            )
-          : t('Always shown for normal users', { _tags: tags }),
-      type: 'switch',
-      value: watchAdButtonEnabledForPremium,
-      searchKeywords: [
-        'watch',
-        'ad',
-        'button',
-        'premium',
-        'support',
-        'show',
-        'enable',
-      ],
-      onValueChange: async (value: boolean | string) => {
-        await setWatchAdButtonEnabledForPremium(value as boolean);
-      },
-      disabled: !(hasNoAds || hasScriptingPro || isSupporter),
-    },
-    {
-      id: 'watch-ad-button',
-      title: 'watch-ad-button',
-      type: 'custom',
-      searchKeywords: [
-        'watch',
-        'ad',
-        'button',
-        'scripting',
-        'time',
-        'no-ads',
-        'reward',
-      ],
-    },
   ];
-
-  const renderCustom = (item: SettingItemType) => {
-    if (item.id === 'watch-ad-button' && showWatchAdButton) {
-      return (
-        <View style={styles.settingItem}>
-          <TouchableOpacity
-            style={[
-              styles.watchAdButton,
-              showingAd && styles.watchAdButtonDisabled,
-            ]}
-            onPress={handleWatchAd}
-            disabled={showingAd}
-          >
-            {showingAd ? (
-              <ActivityIndicator size="small" color={colors.onPrimary} />
-            ) : (
-              <Text style={styles.watchAdButtonText}>
-                {adReady
-                  ? t('Watch Ad (+60 min Scripting & No-Ads)')
-                  : adCooldown
-                    ? t('Cooldown ({cooldownSeconds}s)').replace(
-                        '{cooldownSeconds}',
-                        cooldownSeconds.toString(),
-                      )
-                    : adLoading
-                      ? t('Loading Ad...')
-                      : t('Request Ad')}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    return null;
-  };
 
   return (
     <>
@@ -193,7 +99,6 @@ export const ScriptingAdsSection: React.FC<ScriptingAdsSectionProps> = ({
             icon={itemIcon}
             colors={colors}
             styles={styles}
-            renderCustom={renderCustom}
           />
         );
       })}

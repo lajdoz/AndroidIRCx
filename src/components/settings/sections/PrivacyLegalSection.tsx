@@ -32,7 +32,6 @@ interface PrivacyLegalSectionProps {
   };
   settingIcons: Record<string, SettingIcon | undefined>;
   onShowDataPrivacy: () => void;
-  onShowPrivacyAds: () => void;
 }
 
 export const PrivacyLegalSection: React.FC<PrivacyLegalSectionProps> = ({
@@ -40,7 +39,6 @@ export const PrivacyLegalSection: React.FC<PrivacyLegalSectionProps> = ({
   styles,
   settingIcons,
   onShowDataPrivacy,
-  onShowPrivacyAds,
 }) => {
   const t = useT();
   const tags = 'screen:settings,file:PrivacyLegalSection.tsx,feature:settings';
@@ -65,26 +63,6 @@ export const PrivacyLegalSection: React.FC<PrivacyLegalSectionProps> = ({
         'information',
       ],
       onPress: onShowDataPrivacy,
-    },
-    {
-      id: 'privacy-ads',
-      title: t('Privacy & Ads', { _tags: tags }),
-      description: t(
-        'Manage consent for personalized ads and watch ads for rewards',
-        { _tags: tags },
-      ),
-      type: 'button',
-      searchKeywords: [
-        'privacy',
-        'ads',
-        'consent',
-        'personalized',
-        'advertising',
-        'rewards',
-        'watch',
-        'manage',
-      ],
-      onPress: onShowPrivacyAds,
     },
   ];
 

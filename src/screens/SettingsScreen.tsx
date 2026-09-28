@@ -69,7 +69,6 @@ import { KeyManagementScreen } from './KeyManagementScreen';
 import { FirstRunSetupScreen } from './FirstRunSetupScreen';
 import { ZncSubscriptionScreen } from './ZncSubscriptionScreen';
 import { PrivacyRelayScreen } from './PrivacyRelayScreen';
-import { PrivacyAdsScreen } from './PrivacyAdsScreen';
 import { DataPrivacyScreen } from './DataPrivacyScreen';
 import {
   RawMessageCategory,
@@ -254,7 +253,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     useState<PerformanceConfig | null>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
-  const [showPrivacyAds, setShowPrivacyAds] = useState(false);
   const [showDataPrivacy, setShowDataPrivacy] = useState(false);
   const [backupData, setBackupData] = useState('');
   const [showBackupModal, setShowBackupModal] = useState(false);
@@ -2892,7 +2890,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             styles={styles}
             settingIcons={settingIcons}
             onShowDataPrivacy={() => setShowDataPrivacy(true)}
-            onShowPrivacyAds={() => setShowPrivacyAds(true)}
           />
         );
       }
@@ -3823,10 +3820,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <CreditsScreen
         visible={showCredits}
         onClose={() => setShowCredits(false)}
-      />
-      <PrivacyAdsScreen
-        visible={showPrivacyAds}
-        onClose={() => setShowPrivacyAds(false)}
       />
       <DataPrivacyScreen
         visible={showDataPrivacy}

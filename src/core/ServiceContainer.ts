@@ -66,7 +66,6 @@ import { tabService } from '../services/TabService';
 
 // Monetization Services
 import { adRewardService } from '../services/AdRewardService';
-import { bannerAdService } from '../services/BannerAdService';
 import { inAppPurchaseService } from '../services/InAppPurchaseService';
 import { consentService } from '../services/ConsentService';
 
@@ -137,7 +136,6 @@ export const services = {
 
   // Monetization
   adReward: adRewardService,
-  bannerAd: bannerAdService,
   inAppPurchase: inAppPurchaseService,
   consent: consentService,
 } as const;
@@ -206,7 +204,6 @@ export {
 
   // Monetization
   adRewardService,
-  bannerAdService,
   inAppPurchaseService,
   consentService,
 };

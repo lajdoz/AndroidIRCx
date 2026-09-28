@@ -740,7 +740,7 @@ class ScriptingService {
     // Check if user has available time when enabling a script
     if (enabled && !adRewardService.hasAvailableTime()) {
       const msg = t(
-        'Cannot enable script: No scripting time available. Please watch an ad to gain 1 hour of scripting time.',
+        'Cannot enable script: No scripting time available. Purchase unlimited scripting to continue.',
       );
       logger.warn('scripting', msg);
       this.addLog({ level: 'warn', message: msg, scriptId: id });

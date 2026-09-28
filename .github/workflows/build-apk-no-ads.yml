@@ -1,0 +1,124 @@
+# Copyright (c) 2026
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Build Android APK (No Ads)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
+  JAVA_VERSION: '17'
+  ANDROID_API: '36'
+  ANDROID_BUILD_TOOLS: '36.0.0'
+  ANDROID_NDK: '27.1.12297006'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8'
+
+jobs:
+  build-debug-apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Enable Corepack / Yarn
+        run: |
+          corepack enable
+          yarn --version
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager             "platform-tools"             "platforms;android-${ANDROID_API}"             "build-tools;${ANDROID_BUILD_TOOLS}"             "ndk;${ANDROID_NDK}"             "cmake;3.22.1"
+
+      - name: Restore google-services.json from secret
+        if: ${{ !hashFiles('android/app/google-services.json') && secrets.GOOGLE_SERVICES_JSON_B64 != '' }}
+        shell: bash
+        run: |
+          mkdir -p android/app
+          echo '${{ secrets.GOOGLE_SERVICES_JSON_B64 }}' | base64 --decode > android/app/google-services.json
+
+      - name: Check Google Services configuration
+        shell: bash
+        run: |
+          if [ ! -s android/app/google-services.json ]; then
+            echo "ERROR: android/app/google-services.json is missing."
+            echo "Add the GOOGLE_SERVICES_JSON_B64 repository secret, or commit the file if appropriate for your fork."
+            exit 1
+          fi
+
+      - name: Install JavaScript dependencies
+        run: |
+          for i in 1 2 3; do
+            yarn install --frozen-lockfile --network-timeout 120000 && break
+            if [ "$i" -eq 3 ]; then
+              echo "yarn install failed after $i attempts"
+              exit 1
+            fi
+            echo "yarn install failed (attempt $i), retrying in 15s..."
+            sleep 15
+          done
+
+      - name: Verify no Google Mobile Ads dependency remains
+        shell: bash
+        run: |
+          if grep -R --exclude-dir=.git --exclude-dir=node_modules             -E 'react-native-google-mobile-ads|google-mobile-ads|BannerAd|RewardedAd|BannerAdService'             .; then
+            echo "ERROR: advertising references remain in the source tree."
+            exit 1
+          fi
+
+      - name: Type-check
+        run: yarn type-check
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew clean assembleDebug --no-daemon --stacktrace
+
+      - name: Find APK
+        id: apk
+        shell: bash
+        run: |
+          APK="$(find android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "No APK produced."
+            exit 1
+          fi
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+          echo "APK produced: $APK"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroidIRCx-no-ads-debug
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+          retention-days: 14

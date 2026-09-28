@@ -32,9 +32,7 @@ import { TypingIndicator } from './TypingIndicator';
 import { AIActivityStrip } from './AIActivityStrip';
 import { UserList } from './UserList';
 import { HeaderBar } from './HeaderBar';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { ChannelTab } from '../types';
-import { bannerAdService } from '../services/BannerAdService';
 import { settingsService } from '../services/SettingsService';
 import { useUIStore } from '../stores/uiStore';
 import { scriptingService } from '../services/ScriptingService';
@@ -61,7 +59,6 @@ interface AppLayoutProps {
   showEncryptionIndicators: boolean;
   showTypingIndicators: boolean;
   typingUsers: Map<string, Map<string, Map<string, any>>>;
-  bannerVisible: boolean;
   prefillMessage: string | null;
   layoutConfig: LayoutConfig;
   sideTabsVisible: boolean;
@@ -157,7 +154,6 @@ export function AppLayout({
   showEncryptionIndicators,
   showTypingIndicators,
   typingUsers,
-  bannerVisible,
   prefillMessage,
   layoutConfig,
   sideTabsVisible,
@@ -197,9 +193,6 @@ export function AppLayout({
   const [searchVisible, setSearchVisible] = useState(false);
   const [keyboardResetting, setKeyboardResetting] = useState(false);
   const keyboardResetFrameRef = useRef<number | null>(null);
-  const [bannerPosition, setBannerPosition] = useState<
-    'input_above' | 'input_below' | 'tabs_above' | 'tabs_below'
-  >('input_above');
   const [nicklistTongueEnabled, setNicklistTongueEnabled] = useState(true);
   const [nicklistTongueSizePx, setNicklistTongueSizePx] = useState(56);
   const [adaptiveLayoutEnabled, setAdaptiveLayoutEnabled] = useState(true);
@@ -261,23 +254,6 @@ export function AppLayout({
     );
     return () => {
       mounted = false;
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    settingsService.getSetting('bannerPosition', 'input_above').then(value => {
-      if (isMounted)
-        setBannerPosition(
-          value as 'input_above' | 'input_below' | 'tabs_above' | 'tabs_below',
-        );
-    });
-    const unsubscribe = settingsService.onSettingChange<
-      'input_above' | 'input_below' | 'tabs_above' | 'tabs_below'
-    >('bannerPosition', value => setBannerPosition(value));
-    return () => {
-      isMounted = false;
       unsubscribe();
     };
   }, []);
@@ -592,27 +568,6 @@ export function AppLayout({
     Platform.OS === 'android' && !useAndroidBottomSafeArea
       ? 0
       : safeAreaInsets.bottom;
-  const bannerNode = (
-    <View
-      style={[
-        styles.bannerAdContainer,
-        !bannerVisible && styles.bannerAdHidden,
-      ]}
-    >
-      <BannerAd
-        unitId={bannerAdService.getBannerAdUnitId()}
-        size={BannerAdSize.BANNER}
-        requestOptions={{
-          requestNonPersonalizedAdsOnly:
-            !bannerAdService.canShowPersonalizedAds(),
-        }}
-        onAdFailedToLoad={error => {
-          console.error('Banner ad failed to load:', error);
-        }}
-      />
-    </View>
-  );
-
   return (
     <KeyboardAvoidingView
       behavior={keyboardViewEnabled ? keyboardBehavior : undefined}
