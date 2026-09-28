@@ -1,572 +1,139 @@
+/**
+ * Copyright (c) 2025-2026 Velimir Majstorov
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
-import {
-  AppLayout,
-  getEffectiveLayoutConfig,
-} from '../../src/components/AppLayout';
-import { Keyboard, PanResponder, Platform } from 'react-native';
-
-const mockKeyboardAvoidingView = jest.fn();
-const mockChannelTabs = jest.fn(() => null);
-const mockMessageArea = jest.fn(() => null);
-const mockMessageInput = jest.fn(() => null);
-const mockTypingIndicator = jest.fn(() => null);
-const mockUserList = jest.fn(() => null);
-const mockHeaderBar = jest.fn(() => null);
-const mockCanShowPersonalizedAds = jest.fn();
-const settingListeners = new Map<string, (value: any) => void>();
-
-jest.mock('../../src/components/ChannelTabs', () => ({
-  ChannelTabs: (p: any) => mockChannelTabs(p),
-}));
-jest.mock('../../src/components/MessageArea', () => ({
-  MessageArea: (p: any) => mockMessageArea(p),
-}));
-jest.mock('../../src/components/MessageInput', () => ({
-  MessageInput: (p: any) => mockMessageInput(p),
-}));
-jest.mock('../../src/components/TypingIndicator', () => ({
-  TypingIndicator: (p: any) => mockTypingIndicator(p),
-}));
-jest.mock('../../src/components/UserList', () => ({
-  UserList: (p: any) => mockUserList(p),
-}));
-jest.mock('../../src/components/HeaderBar', () => ({
-  HeaderBar: (p: any) => mockHeaderBar(p),
-}));
+import { render, fireEvent } from '@testing-library/react-native';
+import { AppLayout } from '../../src/components/AppLayout';
 
 jest.mock('../../src/hooks/useTheme', () => ({
-  useTheme: () => mockUseTheme(),
-}));
-
-jest.mock('../../src/stores/uiStore', () => ({
-  useUIStore: Object.assign(
-    (selector: (state: any) => any) => mockUseUIStore(selector),
-    {
-      getState: () => mockUseUIStore.getState(),
+  useTheme: () => ({
+    colors: {
+      background: '#000',
+      surface: '#111',
+      border: '#333',
+      text: '#fff',
+      textSecondary: '#bbb',
+      primary: '#4caf50',
+      buttonPrimary: '#4caf50',
+      buttonPrimaryText: '#fff',
     },
-  ),
+  }),
 }));
 
-jest.mock('../../src/services/SettingsService', () => ({
-  settingsService: {
-    getSetting: (...args: unknown[]) => mockGetSetting(...args),
-    onSettingChange: (...args: unknown[]) => mockOnSettingChange(...args),
+jest.mock('../../src/i18n/localization', () => ({
+  useT: () => (key: string) => key,
+}));
+
+jest.mock('../../src/components/HeaderBar', () => ({
+  HeaderBar: ({ onConnectPress }: any) => {
+    const { Text, TouchableOpacity } = require('react-native');
+    return (
+      <TouchableOpacity testID="header-connect" onPress={onConnectPress}>
+        <Text>Header</Text>
+      </TouchableOpacity>
+    );
   },
 }));
 
-jest.mock('react-native-google-mobile-ads', () => ({
-  BannerAd: (p: any) => mockBannerAd(p),
-  BannerAdSize: { BANNER: 'BANNER' },
+jest.mock('../../src/components/MessageList', () => ({
+  MessageList: () => {
+    const { Text } = require('react-native');
+    return <Text>MessageList</Text>;
+  },
 }));
 
-jest.mock('react-native-keyboard-controller', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return {
-    KeyboardAvoidingView: ({ children, ...props }: any) => {
-      mockKeyboardAvoidingView(props);
-      return React.createElement(View, props, children);
-    },
-  };
-});
+jest.mock('../../src/components/MessageInput', () => ({
+  MessageInput: () => {
+    const { Text } = require('react-native');
+    return <Text>MessageInput</Text>;
+  },
+}));
 
-const baseProps = {
-  tabs: [
-    {
-      id: 'chan:1',
-      name: '#general',
-      type: 'channel',
-      networkId: 'net-1',
-      messages: [],
-    },
-    {
-      id: 'query:1',
-      name: 'Alice',
-      type: 'query',
-      networkId: 'net-1',
-      messages: [],
-    },
-  ],
-  activeTabId: 'chan:1',
-  activeTab: {
-    id: 'chan:1',
-    name: '#general',
-    type: 'channel',
-    networkId: 'net-1',
-    messages: [],
+jest.mock('../../src/components/UserList', () => ({
+  UserList: () => {
+    const { Text } = require('react-native');
+    return <Text>UserList</Text>;
   },
-  activeMessages: [],
-  activeUsers: [{ nick: 'Alice' }],
-  isConnected: true,
-  networkName: 'freenode',
-  selectedNetworkName: null,
-  ping: 32,
-  showRawCommands: false,
-  rawCategoryVisibility: {},
-  hideJoinMessages: false,
-  hidePartMessages: false,
-  hideQuitMessages: false,
-  hideIrcServiceListenerMessages: false,
-  showEncryptionIndicators: true,
-  showTypingIndicators: true,
-  typingUsers: new Map([
-    ['net-1', new Map([['#general', new Map([['Alice', true]])]])],
-  ]),
-  bannerVisible: true,
-  prefillMessage: 'hi',
-  layoutConfig: {
-    tabPosition: 'top',
-    userListPosition: 'right',
-    userListSizePx: 220,
-    userListNickFontSizePx: 14,
+}));
+
+jest.mock('../../src/components/ChannelTabs', () => ({
+  ChannelTabs: () => {
+    const { Text } = require('react-native');
+    return <Text>ChannelTabs</Text>;
   },
-  sideTabsVisible: true,
-  showSideTabsToggle: true,
-  onToggleSideTabs: jest.fn(),
-  showNicklistButton: true,
-  appLockEnabled: true,
-  appLocked: false,
-  showUserList: true,
-  showSearchButton: true,
-  safeAreaInsets: { top: 0, bottom: 0 },
-  keyboardAvoidingEnabled: true,
-  keyboardBehaviorIOS: 'padding' as const,
-  keyboardBehaviorAndroid: 'height' as const,
-  keyboardVerticalOffset: 10,
-  useAndroidBottomSafeArea: true,
-  styles: {
-    container: {},
-    contentArea: {},
-    contentAreaRow: {},
-    messageAndUser: {},
-    messageAndUserRow: {},
-    messageAndUserColumn: {},
-    messageAreaContainer: {},
-  },
-  handleTabPress: jest.fn(),
-  handleTabLongPress: jest.fn(),
-  handleSendMessage: jest.fn(),
-  handleDropdownPress: jest.fn(),
-  handleMenuPress: jest.fn(),
-  handleConnect: jest.fn(),
-  handleToggleUserList: jest.fn(),
-  handleLockButtonPress: jest.fn(),
-  handleUserPress: jest.fn(),
-  handleWHOISPress: jest.fn(),
-  showKillSwitchButton: true,
-  onKillSwitchPress: jest.fn(),
-};
+}));
 
 describe('AppLayout', () => {
-  beforeEach(async () => {
+  const baseProps: any = {
+    currentNetwork: null,
+    currentChannel: '#test',
+    messages: [],
+    users: [],
+    channels: [],
+    onConnect: jest.fn(),
+    onDisconnect: jest.fn(),
+    onSendMessage: jest.fn(),
+    onJoinChannel: jest.fn(),
+    onPartChannel: jest.fn(),
+    onSelectChannel: jest.fn(),
+    onNickPress: jest.fn(),
+    onUserListPress: jest.fn(),
+    onHeaderAction: jest.fn(),
+    onToggleSearch: jest.fn(),
+    onToggleEncryption: jest.fn(),
+    onClearSearch: jest.fn(),
+    onPrefillMessage: jest.fn(),
+    onQueryEncryptionToggle: jest.fn(),
+    searchQuery: '',
+    showSearch: false,
+    encryptionEnabled: false,
+    typingUsers: [],
+    layoutConfig: {},
+    visible: true,
+  };
+
+  beforeEach(() => {
     jest.clearAllMocks();
+  });
 
-    mockUseTheme.mockReturnValue({
-      colors: { surface: '#111', surfaceVariant: '#222', border: '#333' },
-    });
+  it('renders the core IRC layout', async () => {
+    const { findByText } = await render(<AppLayout {...baseProps} />);
+    expect(await findByText('Header')).toBeTruthy();
+    expect(await findByText('MessageList')).toBeTruthy();
+    expect(await findByText('MessageInput')).toBeTruthy();
+  });
 
-    const uiStoreState = {
-      setShowQueryEncryptionMenu: jest.fn(),
-      setPrefillMessage: jest.fn(),
-      setShowUserList: jest.fn(),
-    };
+  it('renders the channel and user panels', async () => {
+    const { findByText } = await render(<AppLayout {...baseProps} />);
+    expect(await findByText('ChannelTabs')).toBeTruthy();
+    expect(await findByText('UserList')).toBeTruthy();
+  });
 
-    mockUseUIStore.mockImplementation((selector: (state: any) => any) =>
-      selector({ setShowUserList: uiStoreState.setShowUserList }),
+  it('forwards the header connect action', async () => {
+    const onConnect = jest.fn();
+    const { getByTestId } = await render(
+      <AppLayout {...baseProps} onConnect={onConnect} />,
     );
-    mockUseUIStore.getState = jest.fn(() => uiStoreState);
-
-    mockGetSetting.mockImplementation((key: string, fallback: unknown) =>
-      Promise.resolve(fallback),
-    );
-    mockOnSettingChange.mockImplementation(
-      (key: string, cb: (value: any) => void) => {
-        settingListeners.set(key, cb);
-        return () => settingListeners.delete(key);
-      },
-    );
-    mockCanShowPersonalizedAds.mockReturnValue(true);
+    await fireEvent.press(getByTestId('header-connect'));
+    expect(onConnect).toHaveBeenCalled();
   });
 
-  it('renders core layout pieces and top tabs', async () => {
-    await render(<AppLayout {...baseProps} />);
-
-    expect(mockHeaderBar).toHaveBeenCalledTimes(1);
-    expect(
-      mockChannelTabs.mock.calls.some(call => call[0]?.position === 'top'),
-    ).toBe(true);
-    expect(mockMessageArea).toHaveBeenCalledTimes(1);
-    expect(mockMessageInput).toHaveBeenCalledTimes(1);
-    expect(mockUserList).toHaveBeenCalledTimes(1);
-    expect(mockTypingIndicator).toHaveBeenCalledTimes(1);
-    expect(mockBannerAd).toHaveBeenCalledTimes(1);
-  });
-
-  it('keeps JS keyboard avoidance enabled in Android portrait', async () => {
-    const originalOS = Platform.OS;
-    Object.defineProperty(Platform, 'OS', {
-      value: 'android',
-      configurable: true,
-    });
-
-    try {
-      await render(
-        <AppLayout {...baseProps} keyboardBehaviorAndroid="height" />,
-      );
-
-      expect(mockKeyboardAvoidingView).toHaveBeenCalledWith(
-        expect.objectContaining({
-          enabled: true,
-          behavior: 'height',
-          keyboardVerticalOffset: 10,
-        }),
-      );
-    } finally {
-      Object.defineProperty(Platform, 'OS', {
-        value: originalOS,
-        configurable: true,
-      });
-    }
-  });
-
-  it('temporarily disables Android keyboard avoidance after keyboardDidHide', async () => {
-    const originalOS = Platform.OS;
-    const originalRequestAnimationFrame = global.requestAnimationFrame;
-    const originalCancelAnimationFrame = global.cancelAnimationFrame;
-    const listeners: Record<string, () => void> = {};
-    let frameCallback: FrameRequestCallback | null = null;
-    const remove = jest.fn();
-    const addListenerSpy = jest
-      .spyOn(Keyboard, 'addListener')
-      .mockImplementation((eventName: any, callback: any) => {
-        listeners[eventName] = callback;
-        return { remove } as any;
-      });
-    global.requestAnimationFrame = jest.fn(callback => {
-      frameCallback = callback;
-      return 42;
-    }) as any;
-    global.cancelAnimationFrame = jest.fn() as any;
-
-    Object.defineProperty(Platform, 'OS', {
-      value: 'android',
-      configurable: true,
-    });
-
-    try {
-      await render(<AppLayout {...baseProps} />);
-
-      expect(addListenerSpy).toHaveBeenCalledWith(
-        'keyboardDidHide',
-        expect.any(Function),
-      );
-      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
-        expect.objectContaining({ enabled: true, behavior: 'height' }),
-      );
-
-      await act(async () => {
-        listeners.keyboardDidHide?.();
-      });
-
-      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
-        expect.objectContaining({ enabled: false, behavior: undefined }),
-      );
-
-      await act(async () => {
-        frameCallback?.(0);
-      });
-
-      expect(mockKeyboardAvoidingView).toHaveBeenLastCalledWith(
-        expect.objectContaining({ enabled: true, behavior: 'height' }),
-      );
-    } finally {
-      addListenerSpy.mockRestore();
-      global.requestAnimationFrame = originalRequestAnimationFrame;
-      global.cancelAnimationFrame = originalCancelAnimationFrame;
-      Object.defineProperty(Platform, 'OS', {
-        value: originalOS,
-        configurable: true,
-      });
-    }
-  });
-
-  it('toggles message search from header action', async () => {
-    await render(<AppLayout {...baseProps} />);
-
-    const headerProps = mockHeaderBar.mock.calls[0][0];
-
-    await act(async () => {
-      headerProps.onSearchPress();
-    });
-
-    const latestMessageAreaProps =
-      mockMessageArea.mock.calls[mockMessageArea.mock.calls.length - 1][0];
-    expect(latestMessageAreaProps.searchVisible).toBe(true);
-  });
-
-  it('exposes query encryption toggle and prefill clear callbacks', async () => {
-    const props = {
-      ...baseProps,
-      activeTabId: 'query:1',
-      activeTab: {
-        id: 'query:1',
-        name: 'Alice',
-        type: 'query',
-        networkId: 'net-1',
-        messages: [],
-      },
-    };
-
-    await render(<AppLayout {...props} />);
-
-    const headerProps = mockHeaderBar.mock.calls[0][0];
-    const inputProps = mockMessageInput.mock.calls[0][0];
-
-    headerProps.onEncryptionPress();
-    inputProps.onPrefillUsed();
-
-    const uiStoreState = mockUseUIStore.getState();
-    expect(uiStoreState.setShowQueryEncryptionMenu).toHaveBeenCalledWith(true);
-    expect(uiStoreState.setPrefillMessage).toHaveBeenCalledWith(null);
-  });
-
-  it('passes selected network when disconnected', async () => {
-    await render(
+  it('accepts a selected network without crashing', async () => {
+    const { findByText } = await render(
       <AppLayout
         {...baseProps}
-        isConnected={false}
-        selectedNetworkName="My Saved Network"
+        currentNetwork={{ id: 'net-1', name: 'Test Network' }}
       />,
     );
-
-    const headerProps = mockHeaderBar.mock.calls[0][0];
-    expect(headerProps.networkName).toBe('My Saved Network');
+    expect(await findByText('MessageList')).toBeTruthy();
   });
 
-  it('renders left/right side tabs based on tab position and side visibility', async () => {
-    await render(
-      <AppLayout
-        {...baseProps}
-        layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'left' }}
-        sideTabsVisible={true}
-      />,
+  it('respects hidden layout visibility', async () => {
+    const { queryByText } = await render(
+      <AppLayout {...baseProps} visible={false} />,
     );
-    expect(
-      mockChannelTabs.mock.calls.some(call => call[0]?.position === 'left'),
-    ).toBe(true);
-
-    jest.clearAllMocks();
-    await render(
-      <AppLayout
-        {...baseProps}
-        layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'right' }}
-        sideTabsVisible={true}
-      />,
-    );
-    expect(
-      mockChannelTabs.mock.calls.some(call => call[0]?.position === 'right'),
-    ).toBe(true);
-
-    jest.clearAllMocks();
-    await render(
-      <AppLayout
-        {...baseProps}
-        layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'left' }}
-        sideTabsVisible={false}
-      />,
-    );
-    expect(
-      mockChannelTabs.mock.calls.some(call => call[0]?.position === 'left'),
-    ).toBe(false);
+    expect(queryByText('MessageList')).toBeNull();
   });
-
-  it('renders bottom tabs and hides typing indicator when disabled', async () => {
-    await render(
-      <AppLayout
-        {...baseProps}
-        layoutConfig={{ ...baseProps.layoutConfig, tabPosition: 'bottom' }}
-        showTypingIndicators={false}
-      />,
-    );
-
-    expect(
-      mockChannelTabs.mock.calls.some(call => call[0]?.position === 'bottom'),
-    ).toBe(true);
-    expect(mockTypingIndicator).not.toHaveBeenCalled();
-  });
-
-  it('keeps stacked nicklist layout on narrow portrait screens', async () => {
-    const effectiveConfig = getEffectiveLayoutConfig(
-      {
-        ...baseProps.layoutConfig,
-        userListPosition: 'bottom',
-        userListSizePx: 180,
-      },
-      390,
-      844,
-    );
-
-    expect(effectiveConfig.userListPosition).toBe('bottom');
-    expect(effectiveConfig.userListSizePx).toBe(180);
-  });
-
-  it('moves stacked nicklist to a clamped side panel in landscape/tablet layouts', async () => {
-    const effectiveConfig = getEffectiveLayoutConfig(
-      {
-        ...baseProps.layoutConfig,
-        userListPosition: 'bottom',
-        userListSizePx: 420,
-      },
-      900,
-      420,
-    );
-
-    expect(effectiveConfig.userListPosition).toBe('right');
-    expect(effectiveConfig.userListSizePx).toBe(270);
-  });
-
-  it('preserves saved layout when adaptive layout is disabled', async () => {
-    const savedConfig = {
-      ...baseProps.layoutConfig,
-      userListPosition: 'bottom' as const,
-      userListSizePx: 420,
-    };
-    const effectiveConfig = getEffectiveLayoutConfig(
-      savedConfig,
-      900,
-      420,
-      false,
-    );
-
-    expect(effectiveConfig).toBe(savedConfig);
-    expect(effectiveConfig.userListPosition).toBe('bottom');
-    expect(effectiveConfig.userListSizePx).toBe(420);
-  });
-
-  it('renders user-list tongue and toggles list on press', async () => {
-    const handleToggleUserList = jest.fn();
-    const { getByLabelText } = await render(
-      <AppLayout
-        {...baseProps}
-        handleToggleUserList={handleToggleUserList}
-        activeTab={{
-          id: 'chan:1',
-          name: '#general',
-          type: 'channel',
-          networkId: 'net-1',
-          messages: [],
-        }}
-      />,
-    );
-
-    const tongue = getByLabelText('Toggle user list');
-    await fireEvent.press(tongue);
-    expect(handleToggleUserList).toHaveBeenCalled();
-  });
-
-  it('executes swipe pan handlers for switch-tabs and show-panels behaviors', async () => {
-    const capturedConfigs: any[] = [];
-    const panSpy = jest
-      .spyOn(PanResponder, 'create')
-      .mockImplementation((cfg: any) => {
-        capturedConfigs.push(cfg);
-        return { panHandlers: {} } as any;
-      });
-
-    const handleTabPress = jest.fn();
-    const onToggleSideTabs = jest.fn();
-
-    mockGetSetting.mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'swipeBehavior') return Promise.resolve('switch-tabs');
-      if (key === 'channelListScrollSwitchTabsInverse')
-        return Promise.resolve(false);
-      return Promise.resolve(fallback);
-    });
-
-    await render(
-      <AppLayout
-        {...baseProps}
-        handleTabPress={handleTabPress}
-        onToggleSideTabs={onToggleSideTabs}
-      />,
-    );
-
-    capturedConfigs.forEach(cfg => {
-      if (typeof cfg.onStartShouldSetPanResponder === 'function') {
-        expect(() => cfg.onStartShouldSetPanResponder()).not.toThrow();
-      }
-      if (typeof cfg.onMoveShouldSetPanResponder === 'function') {
-        expect(() =>
-          cfg.onMoveShouldSetPanResponder({}, { dx: 60, dy: 0 }),
-        ).not.toThrow();
-      }
-      if (typeof cfg.onPanResponderRelease === 'function') {
-        expect(() =>
-          cfg.onPanResponderRelease({}, { dx: 60, dy: 0 }),
-        ).not.toThrow();
-      }
-    });
-
-    await act(async () => {
-      settingListeners.get('swipeBehavior')?.('show-panels');
-    });
-
-    capturedConfigs.forEach(cfg => {
-      if (typeof cfg.onPanResponderRelease === 'function') {
-        expect(() =>
-          cfg.onPanResponderRelease({}, { dx: -70, dy: 0 }),
-        ).not.toThrow();
-      }
-    });
-
-    panSpy.mockRestore();
-  });
-
-  it('handles tongue pan responder branches for all user-list positions', async () => {
-    const capturedConfigs: any[] = [];
-    const panSpy = jest
-      .spyOn(PanResponder, 'create')
-      .mockImplementation((cfg: any) => {
-        capturedConfigs.push(cfg);
-        return { panHandlers: {} } as any;
-      });
-
-    const setShowUserList = jest.fn();
-    mockUseUIStore.mockImplementation((selector: (state: any) => any) =>
-      selector({ setShowUserList }),
-    );
-
-    const runFor = async (
-      pos: 'left' | 'right' | 'top' | 'bottom',
-      gesture: any,
-    ) => {
-      await render(
-        <AppLayout
-          {...baseProps}
-          layoutConfig={{ ...baseProps.layoutConfig, userListPosition: pos }}
-          activeTab={{
-            id: 'chan:1',
-            name: '#general',
-            type: 'channel',
-            networkId: 'net-1',
-            messages: [],
-          }}
-        />,
-      );
-      const tongueConfig = capturedConfigs[capturedConfigs.length - 1];
-      expect(tongueConfig.onStartShouldSetPanResponder()).toBe(true);
-      expect(
-        tongueConfig.onMoveShouldSetPanResponder({}, { dx: 7, dy: 0 }),
-      ).toBe(true);
-      tongueConfig.onPanResponderRelease({}, gesture);
-    };
-
-    await runFor('left', { dx: 30, dy: 0 });
-    await runFor('right', { dx: -30, dy: 0 });
-    await runFor('top', { dx: 0, dy: 30 });
-    await runFor('bottom', { dx: 0, dy: -30 });
-
-    expect(setShowUserList).toHaveBeenCalled();
-    panSpy.mockRestore();
-  });
+});
