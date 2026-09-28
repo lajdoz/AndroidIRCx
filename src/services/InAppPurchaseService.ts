@@ -143,6 +143,7 @@ class InAppPurchaseService {
    * Hierarchy: remove_ads OR pro_unlimited OR supporter_pro
    */
   hasNoAds(): boolean {
+    if (__DEV__) return true;
     return (
       this.purchases[PRODUCT_REMOVE_ADS] ||
       this.purchases[PRODUCT_PRO_UNLIMITED] ||
@@ -155,6 +156,7 @@ class InAppPurchaseService {
    * Hierarchy: pro_unlimited OR supporter_pro
    */
   hasUnlimitedScripting(): boolean {
+    if (__DEV__) return true;
     return (
       this.purchases[PRODUCT_PRO_UNLIMITED] ||
       this.purchases[PRODUCT_SUPPORTER_PRO]
@@ -166,6 +168,7 @@ class InAppPurchaseService {
    * Only supporter_pro tier
    */
   isSupporter(): boolean {
+    if (__DEV__) return true;
     return this.purchases[PRODUCT_SUPPORTER_PRO];
   }
 
@@ -173,6 +176,7 @@ class InAppPurchaseService {
    * Get the user's highest tier
    */
   getHighestTier(): 'free' | 'remove_ads' | 'pro_unlimited' | 'supporter_pro' {
+    if (__DEV__) return 'supporter_pro';
     if (this.purchases[PRODUCT_SUPPORTER_PRO]) return 'supporter_pro';
     if (this.purchases[PRODUCT_PRO_UNLIMITED]) return 'pro_unlimited';
     if (this.purchases[PRODUCT_REMOVE_ADS]) return 'remove_ads';
