@@ -4,10 +4,6 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  getCrashlytics,
-  setCrashlyticsCollectionEnabled,
-} from '@react-native-firebase/crashlytics';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { Platform } from 'react-native';
@@ -320,44 +316,6 @@ class DataPrivacyService {
   }
 
   /**
-   * Opt-out of crash reporting (GDPR/CCPA)
-   */
-  async setCrashlyticsOptOut(optOut: boolean): Promise<void> {
-    try {
-      const crashlyticsInstance = getCrashlytics();
-      await setCrashlyticsCollectionEnabled(crashlyticsInstance, !optOut);
-      await AsyncStorage.setItem(
-        '@AndroidIRCX:crashlytics_opt_out',
-        String(optOut),
-      );
-      logger.info(
-        'privacy',
-        `Crashlytics collection ${optOut ? 'disabled' : 'enabled'}`,
-      );
-    } catch (error) {
-      logger.error(
-        'privacy',
-        `Failed to set crashlytics opt-out: ${String(error)}`,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Check if user has opted out of crashlytics
-   */
-  async getCrashlyticsOptOut(): Promise<boolean> {
-    try {
-      const value = await AsyncStorage.getItem(
-        '@AndroidIRCX:crashlytics_opt_out',
-      );
-      return value === 'true';
-    } catch {
-      return false;
-    }
-  }
-
-  /**
    * Get summary of data collected
    */
   async getDataCollectionSummary(): Promise<{
@@ -371,8 +329,6 @@ class DataPrivacyService {
     try {
       const networks = await settingsService.loadNetworks();
       const profiles = await identityProfilesService.list();
-      const crashlyticsOptOut = await this.getCrashlyticsOptOut();
-
       // Get approximate message count
       let messagesCount = 0;
       try {
@@ -403,7 +359,7 @@ class DataPrivacyService {
         networksCount: networks.length,
         identityProfilesCount: profiles.length,
         storageSize,
-        crashlyticsEnabled: !crashlyticsOptOut,
+        crashlyticsEnabled: false,
         consentStatus: consentService.getConsentStatusText(),
       };
     } catch (error) {
