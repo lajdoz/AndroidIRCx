@@ -3,20 +3,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import {
-  getCrashlytics,
-  setUserId as crashlyticsSetUserId,
-  setAttribute as crashlyticsSetAttribute,
-  log as crashlyticsLog,
-  recordError as crashlyticsRecordError,
-} from '@react-native-firebase/crashlytics';
 import { Linking, Platform } from 'react-native';
 import { logger } from './Logger';
 import { tx } from '../i18n/localization';
 
 const t = (key: string, params?: Record<string, unknown>) => tx.t(key, params);
 
-// Patterns to sanitize sensitive data from Crashlytics extras
+// Patterns to sanitize sensitive data from remote crash reporting extras
 const SENSITIVE_KEYS = [
   'password',
   'pass',
@@ -159,7 +152,7 @@ function safeStringify(value: any): string {
 }
 
 /**
- * Sanitize extras object to remove sensitive data before sending to Crashlytics
+ * Sanitize extras object to remove sensitive data before sending to remote crash reporting
  */
 function sanitizeExtras(extras: Record<string, any>): Record<string, any> {
   return sanitizeValue(extras, '', 0, new WeakSet<object>());
@@ -177,75 +170,26 @@ class ErrorReportingService {
   private fallbackEmail = 'admin@dbase.in.rs';
 
   async initialize(): Promise<void> {
-    // Crashlytics collection is enabled by default; avoid deprecated setter warnings.
+    // remote crash reporting collection is enabled by default; avoid deprecated setter warnings.
     this.enabled = true;
   }
 
-  async setUserId(userId: string | null): Promise<void> {
-    if (!this.enabled || !userId) return;
-    try {
-      await crashlyticsSetUserId(getCrashlytics(), userId);
-    } catch {
-      // ignore
-    }
+  async setUserId(_userId: string | null): Promise<void> {
+    // Crash reporting is local-only in this build.
   }
 
   async report(error: any, context?: ErrorContext): Promise<void> {
     const normalizedError = this.normalizeError(error);
-    const { fatal = false, source, tags, extras } = context || {};
+    const { fatal = false, source } = context || {};
     const sanitizedSource = source ? sanitizeString(source) : undefined;
 
-    // Always keep a console log if logger is enabled
     logger.error(
       sanitizedSource || 'error',
       sanitizeString(normalizedError.message),
     );
 
-    // Only push fatal crashes to Crashlytics; non-fatals stay local
-    if (!fatal) return;
-
-    try {
-      if (tags) {
-        Object.entries(tags).forEach(([key, value]) => {
-          try {
-            crashlyticsSetAttribute(
-              getCrashlytics(),
-              key,
-              isSensitiveKey(key) ? REDACTED : sanitizeString(String(value)),
-            );
-          } catch {
-            // ignore
-          }
-        });
-      }
-
-      if (extras) {
-        // Sanitize extras to remove any sensitive data before sending to Crashlytics
-        const sanitizedExtras = sanitizeExtras(extras);
-        Object.entries(sanitizedExtras).forEach(([key, value]) => {
-          try {
-            crashlyticsLog(getCrashlytics(), `${key}: ${safeStringify(value)}`);
-          } catch {
-            // ignore
-          }
-        });
-      }
-
-      if (sanitizedSource) {
-        try {
-          crashlyticsSetAttribute(getCrashlytics(), 'source', sanitizedSource);
-        } catch {
-          // ignore
-        }
-      }
-
-      await crashlyticsRecordError(getCrashlytics(), normalizedError);
-    } catch (err) {
-      console.warn(
-        'ErrorReportingService: Crashlytics failed, using mail fallback',
-        err,
-      );
-      this.tryMailFallback(normalizedError, {
+    if (fatal) {
+      await this.tryMailFallback(normalizedError, {
         ...(context || {}),
         source: sanitizedSource,
       });
@@ -254,11 +198,7 @@ class ErrorReportingService {
 
   log(message: string): void {
     if (!this.enabled) return;
-    try {
-      crashlyticsLog(getCrashlytics(), sanitizeString(message));
-    } catch {
-      // ignore
-    }
+    logger.info('errorReporting', sanitizeString(message));
   }
 
   private normalizeError(error: any): Error {
