@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
 import { inAppPurchaseService } from '../services/InAppPurchaseService';
-import { adRewardService } from '../services/AdRewardService';
 import { settingsService } from '../services/SettingsService';
 import { useT } from '../i18n/localization';
 
@@ -72,24 +70,6 @@ export const useSettingsPremium = (): UseSettingsPremiumReturn => {
   // push state when the ad-status snapshot actually changed, so a static status
   // is a true no-op instead of re-rendering every tick — this keeps the poll from
   // ever becoming an update loop (Crashlytics: "Maximum update depth exceeded").
-  const adStatusSnapshotRef = useRef('');
-  useEffect(() => {
-    const loadAdStatus = () => {
-      const adStatus = adRewardService.getAdStatus();
-      const snapshot = `${adStatus.ready}|${adStatus.loading}|${adStatus.cooldown}|${adStatus.cooldownSeconds}|${adStatus.adUnitType}`;
-      if (snapshot === adStatusSnapshotRef.current) return;
-      adStatusSnapshotRef.current = snapshot;
-      setAdReady(adStatus.ready);
-      setAdLoading(adStatus.loading);
-      setAdCooldown(adStatus.cooldown);
-      setCooldownSeconds(adStatus.cooldownSeconds);
-      setAdUnitType(adStatus.adUnitType);
-    };
-    loadAdStatus();
-    const interval = setInterval(loadAdStatus, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Update watch ad button visibility based on premium status and settings
   useEffect(() => {
     const isPremium = hasNoAds || hasScriptingPro || isSupporter;
@@ -117,37 +97,8 @@ export const useSettingsPremium = (): UseSettingsPremiumReturn => {
   );
 
   const handleWatchAd = useCallback(async () => {
-    if (showingAd) return;
-
-    if (adReady) {
-      setShowingAd(true);
-      try {
-        const success = await adRewardService.showRewardedAd();
-        if (success) {
-          Alert.alert(t('Thank You!'), t('You earned scripting time!'));
-        } else {
-          Alert.alert(
-            t('Ad Failed'),
-            t('Could not show the ad. Please try again.'),
-          );
-        }
-      } catch (error) {
-        Alert.alert(
-          t('Error'),
-          error instanceof Error ? error.message : t('Failed to show ad'),
-        );
-      } finally {
-        setShowingAd(false);
-      }
-      return;
-    }
-
-    const result = await adRewardService.manualLoadAd();
-    Alert.alert(
-      result.success ? t('Loading Ad') : t('Cannot Load Ad'),
-      t(result.messageKey, result.messageParams as Record<string, any>),
-    );
-  }, [adReady, showingAd, t]);
+    return;
+  }, []);
 
   return {
     hasNoAds,
