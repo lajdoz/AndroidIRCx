@@ -1,8 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-apply plugin: "com.google.gms.google-services"
-apply plugin: "com.google.firebase.crashlytics"
 
 import java.util.Properties
 
@@ -17,23 +15,6 @@ if (secretsPropsFile.exists()) {
             project.ext.set(key.toString(), value)
         }
     }
-}
-
-def googleServicesSecrets = new File(repoRootDir, "secrets/google-services.json")
-def googleServicesTarget = file("google-services.json")
-tasks.register("copyGoogleServices") {
-    doLast {
-        if (googleServicesSecrets.exists()) {
-            copy {
-                from googleServicesSecrets
-                into project.projectDir
-            }
-        }
-    }
-}
-
-tasks.matching { it.name.startsWith("process") && it.name.endsWith("GoogleServices") }.configureEach {
-    dependsOn("copyGoogleServices")
 }
 
 def codegenStubTargets = [
@@ -309,14 +290,6 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
 
-            // Upload native (NDK) debug symbols to Crashlytics so native crashes
-            // originating in libhermesvm.so / libreactnative.so (SIGABRT/SIGSEGV
-            // tombstones with only raw offsets) get symbolicated in the console.
-            // Without this, Hermes/JSI native aborts are unreadable. Runs during
-            // assemble/bundleRelease via uploadCrashlyticsSymbolFileRelease.
-            firebaseCrashlytics {
-                nativeSymbolUploadEnabled true
-            }
         }
     }
 
@@ -345,7 +318,6 @@ android {
     }
 }
 
-preBuild.dependsOn("copyGoogleServices")
 preBuild.dependsOn("ensureAutolinkingCodegenStubs")
 
 dependencies {
@@ -361,15 +333,7 @@ dependencies {
         implementation jscFlavor
     }
 
-    // Firebase app services used by AndroidIRCX. Do not include Firebase Messaging
-    // unless remote push is implemented; unused FCM auto-init has caused
-    // FirebaseMessaging token refresh crashes in production.
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-    implementation("com.google.firebase:firebase-appcheck")
-    implementation("com.google.firebase:firebase-appcheck-playintegrity")
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
-    debugImplementation("com.google.firebase:firebase-appcheck-debug")
+    // Google Play Integrity and Age Signals remain available without Firebase.
     implementation("com.google.android.play:integrity:1.6.0")
     implementation("com.google.android.play:age-signals:0.0.3")
 
