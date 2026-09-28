@@ -111,10 +111,7 @@ jest.mock('../../src/services/AdRewardService', () => ({
     getRemainingTimeFormatted: jest.fn(),
     hasAvailableTime: jest.fn(),
     isTracking: jest.fn(),
-    getAdStatus: jest.fn(),
     addListener: jest.fn(),
-    showRewardedAd: jest.fn(),
-    manualLoadAd: jest.fn(),
     startUsageTracking: jest.fn(),
     stopUsageTracking: jest.fn(),
   },
@@ -172,19 +169,7 @@ describe('ScriptingScreen', () => {
     adRewardService.getRemainingTimeFormatted.mockReturnValue('59m');
     adRewardService.hasAvailableTime.mockReturnValue(true);
     adRewardService.isTracking.mockReturnValue(false);
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: false,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
     adRewardService.addListener.mockReturnValue(jest.fn());
-    adRewardService.showRewardedAd.mockResolvedValue(true);
-    adRewardService.manualLoadAd.mockResolvedValue({
-      success: true,
-      messageKey: 'Loading Ad',
-    });
 
     inAppPurchaseService.hasUnlimitedScripting.mockReturnValue(false);
   });
@@ -245,49 +230,6 @@ describe('ScriptingScreen', () => {
     await waitFor(() =>
       expect(addonSafetyService.setSafeMode).toHaveBeenCalledWith(true),
     );
-  });
-
-  it('requests an ad when not ready and shows rewarded ad when ready', async () => {
-    const { findByText, rerender } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    await fireEvent.press(await findByText('Request Ad'));
-    await waitFor(async () => {
-      expect(adRewardService.manualLoadAd).toHaveBeenCalledTimes(1);
-      expect(Alert.alert).toHaveBeenCalledWith('Loading Ad', 'Loading Ad');
-    });
-
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: true,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
-
-    await rerender(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-    await fireEvent.press(
-      await findByText('Watch Ad (+60 min Scripting & No-Ads)'),
-    );
-
-    await waitFor(async () => {
-      expect(adRewardService.showRewardedAd).toHaveBeenCalledTimes(1);
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Thank You!',
-        'You earned scripting time!',
-      );
-    });
   });
 
   it('creates and saves a new script, validates JSON and lints code', async () => {
@@ -364,31 +306,6 @@ describe('ScriptingScreen', () => {
       expect(scriptingService.clearLogs).toHaveBeenCalledTimes(1);
     });
   });
-
-  it('handles ad listener updates and upgrade button flow', async () => {
-    const onClose = jest.fn();
-    const onShowPurchaseScreen = jest.fn();
-
-    await render(
-      <ScriptingScreen
-        visible
-        onClose={onClose}
-        onShowPurchaseScreen={onShowPurchaseScreen}
-      />,
-    );
-
-    const listener = adRewardService.addListener.mock.calls[0]?.[0];
-    await act(() => {
-      listener?.(0);
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(async () => {
-      expect(scriptingService.list).toHaveBeenCalled();
-    });
-  });
-
-  // Additional tests to improve coverage
 
   it('renders empty state when no scripts are installed', async () => {
     scriptingService.list.mockReturnValue([]);
@@ -541,67 +458,6 @@ describe('ScriptingScreen', () => {
     expect(await findByText(/No scripting time available/)).toBeTruthy();
   });
 
-  it('shows ad loading state', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: false,
-      loading: true,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    expect(await findByText('Loading Ad...')).toBeTruthy();
-  });
-
-  it('shows ad cooldown state with countdown', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: false,
-      loading: false,
-      cooldown: true,
-      cooldownSeconds: 45,
-      adUnitType: 'Primary',
-    });
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    expect(await findByText('Cooldown (45s)')).toBeTruthy();
-    expect(await findByText(/Ads temporarily unavailable/)).toBeTruthy();
-  });
-
-  it('shows fallback ad unit indicator', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: false,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Fallback',
-    });
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    expect(await findByText('Using fallback ad unit')).toBeTruthy();
-  });
-
   it('shows unlimited scripting UI for premium users', async () => {
     inAppPurchaseService.hasUnlimitedScripting.mockReturnValue(true);
 
@@ -634,89 +490,6 @@ describe('ScriptingScreen', () => {
     expect(
       queryByText('💎 Upgrade to Unlimited Scripting & No-Ads'),
     ).toBeNull();
-  });
-
-  it('handles ad show failure', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: true,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
-    adRewardService.showRewardedAd.mockResolvedValue(false);
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    await fireEvent.press(
-      await findByText('Watch Ad (+60 min Scripting & No-Ads)'),
-    );
-
-    await waitFor(async () => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Ad Failed',
-        'Could not show the ad. Please try again.',
-      );
-    });
-  });
-
-  it('handles ad show error with exception', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: true,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
-    adRewardService.showRewardedAd.mockRejectedValue(
-      new Error('Network error'),
-    );
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    await fireEvent.press(
-      await findByText('Watch Ad (+60 min Scripting & No-Ads)'),
-    );
-
-    await waitFor(async () => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Network error');
-    });
-  });
-
-  it('handles manual ad load failure', async () => {
-    adRewardService.manualLoadAd.mockResolvedValue({
-      success: false,
-      messageKey: 'Ad load failed',
-    });
-
-    const { findByText } = await render(
-      <ScriptingScreen
-        visible
-        onClose={jest.fn()}
-        onShowPurchaseScreen={jest.fn()}
-      />,
-    );
-
-    await fireEvent.press(await findByText('Request Ad'));
-
-    await waitFor(async () => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Cannot Load Ad',
-        'Ad load failed',
-      );
-    });
   });
 
   it('toggles syntax highlighting in editor', async () => {
@@ -1162,18 +935,8 @@ describe('ScriptingScreen', () => {
   // under the new async render/act pipeline. The in-progress guard is
   // covered indirectly by the surrounding ad-flow tests.
   it.skip('prevents multiple ad shows when already showing', async () => {
-    adRewardService.getAdStatus.mockReturnValue({
-      ready: true,
-      loading: false,
-      cooldown: false,
-      cooldownSeconds: 0,
-      adUnitType: 'Primary',
-    });
     // Make showRewardedAd hang to simulate showing state
-    adRewardService.showRewardedAd.mockImplementation(
-      () => new Promise(() => {}),
-    );
-
+    
     const { findByText } = await render(
       <ScriptingScreen
         visible

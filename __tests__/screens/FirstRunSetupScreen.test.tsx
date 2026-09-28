@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Alert, Linking } from 'react-native';
+import { Alert } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { FirstRunSetupScreen } from '../../src/screens/FirstRunSetupScreen';
 
@@ -61,19 +61,10 @@ jest.mock('../../src/services/IdentityProfilesService', () => ({
   },
 }));
 
-jest.mock('../../src/services/ConsentService', () => ({
-  consentService: {
-    showConsentFormIfRequired: jest.fn(),
-    getPrivacyPolicyUrl: jest.fn(() => 'https://example.com/privacy'),
-    acceptConsentManually: jest.fn(),
-  },
-}));
-
 const { settingsService } = require('../../src/services/SettingsService');
 const {
   identityProfilesService,
 } = require('../../src/services/IdentityProfilesService');
-const { consentService } = require('../../src/services/ConsentService');
 
 describe('FirstRunSetupScreen', () => {
   let consoleErrorSpy: jest.SpyInstance;
@@ -81,7 +72,6 @@ describe('FirstRunSetupScreen', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
-    jest.spyOn(Linking, 'openURL').mockResolvedValue(true as any);
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     identityProfilesService.add.mockResolvedValue({ id: 'profile-1' });
@@ -100,22 +90,19 @@ describe('FirstRunSetupScreen', () => {
     settingsService.createDefaultNetwork.mockResolvedValue(undefined);
     settingsService.addNetwork.mockResolvedValue(undefined);
     settingsService.setFirstRunCompleted.mockResolvedValue(undefined);
-    consentService.showConsentFormIfRequired.mockResolvedValue(true);
-    consentService.acceptConsentManually.mockResolvedValue(undefined);
   });
 
   afterEach(async () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it('renders welcome step and advances through privacy to identity', async () => {
+  it('renders welcome step and advances to identity', async () => {
     const { findByText } = await render(
       <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
     );
 
     expect(await findByText('Welcome to AndroidIRCX')).toBeTruthy();
     await fireEvent.press(await findByText('Next'));
-    expect(await findByText('Privacy & Ads')).toBeTruthy();
     await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
 
     await waitFor(async () => {
@@ -350,77 +337,6 @@ describe('FirstRunSetupScreen', () => {
     );
   });
 
-  it('shows manual privacy agreement and accepts consent when no form is required', async () => {
-    consentService.showConsentFormIfRequired.mockResolvedValue(false);
-
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await act(async () => {
-      await fireEvent.press(
-        await findByText('Accept Privacy Terms & Continue'),
-      );
-    });
-
-    await waitFor(async () => {
-      expect(
-        (Alert.alert as jest.Mock).mock.calls.some(
-          call => call[0] === 'Privacy Agreement',
-        ),
-      ).toBe(true);
-    });
-
-    const privacyAgreementCall = (Alert.alert as jest.Mock).mock.calls.find(
-      call => call[0] === 'Privacy Agreement',
-    );
-    expect(privacyAgreementCall).toBeTruthy();
-    const alertButtons = privacyAgreementCall?.[2];
-    await act(async () => {
-      await alertButtons?.[1]?.onPress?.();
-    });
-
-    await waitFor(async () => {
-      expect(consentService.acceptConsentManually).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('opens privacy policy links and surfaces open failures', async () => {
-    consentService.showConsentFormIfRequired.mockResolvedValue(false);
-
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('📄 Read Full Privacy Policy'));
-    expect(Linking.openURL).toHaveBeenCalledWith('https://example.com/privacy');
-
-    await act(async () => {
-      await fireEvent.press(
-        await findByText('Accept Privacy Terms & Continue'),
-      );
-    });
-
-    const privacyAgreementCall = (Alert.alert as jest.Mock).mock.calls.find(
-      call => call[0] === 'Privacy Agreement',
-    );
-    expect(privacyAgreementCall).toBeTruthy();
-
-    (Linking.openURL as jest.Mock).mockRejectedValueOnce(
-      new Error('no browser'),
-    );
-    await act(async () => {
-      await privacyAgreementCall?.[2]?.[0]?.onPress?.();
-    });
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Error',
-      'Failed to open privacy policy.',
-    );
-  });
-
   it('allows navigating back and skipping from welcome', async () => {
     const onSkip = jest.fn();
     const { findByText } = await render(
@@ -435,82 +351,3 @@ describe('FirstRunSetupScreen', () => {
     await fireEvent.press(await findByText('Back'));
     expect(await findByText('Welcome to AndroidIRCX')).toBeTruthy();
   });
-
-  it('handles consent and save failures gracefully', async () => {
-    consentService.showConsentFormIfRequired.mockRejectedValueOnce(
-      new Error('ump failed'),
-    );
-
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await act(async () => {
-      await fireEvent.press(
-        await findByText('Accept Privacy Terms & Continue'),
-      );
-    });
-
-    await waitFor(async () => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Consent error:',
-        expect.any(Error),
-      );
-    });
-
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('DBase (Optional Default)'));
-    await fireEvent.press(await findByText('Next'));
-
-    identityProfilesService.add.mockRejectedValueOnce(new Error('save failed'));
-    await fireEvent.press(await findByText('Complete Setup'));
-
-    await waitFor(async () => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Error',
-        'Failed to save network configuration',
-      );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'FirstRunSetup save error:',
-        expect.any(Error),
-      );
-    });
-  });
-
-  it('shows consent save failure from manual accept path', async () => {
-    consentService.showConsentFormIfRequired.mockResolvedValue(false);
-    consentService.acceptConsentManually.mockRejectedValueOnce(
-      new Error('save consent failed'),
-    );
-
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await act(async () => {
-      await fireEvent.press(
-        await findByText('Accept Privacy Terms & Continue'),
-      );
-    });
-
-    const privacyAgreementCall = (Alert.alert as jest.Mock).mock.calls.find(
-      call => call[0] === 'Privacy Agreement',
-    );
-
-    await act(async () => {
-      await privacyAgreementCall?.[2]?.[1]?.onPress?.();
-    });
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Error',
-      'Failed to save consent. Please try again.',
-    );
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to save consent:',
-      expect.any(Error),
-    );
-  });
-});

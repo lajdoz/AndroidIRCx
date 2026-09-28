@@ -463,11 +463,11 @@ export const ScriptingScreen: React.FC<Props> = ({
 
   const toggleScriptingTimeActive = useCallback((value: boolean) => {
     if (value) {
-      // Start scripting time tracking (also enables no-ads mode)
-      // For users with unlimited scripting, this will just enable the mode without tracking
+      // Start scripting time tracking
+      // Unlimited scripting keeps the toggle available without consuming time
       adRewardService.startUsageTracking();
     } else {
-      // Stop scripting time tracking (also disables no-ads mode)
+      // Stop scripting time tracking
       adRewardService.stopUsageTracking();
     }
     // Update state immediately for better UX
@@ -810,10 +810,10 @@ export const ScriptingScreen: React.FC<Props> = ({
           showsVerticalScrollIndicator={true}
         >
           {/* Scripting Time & Ad Reward Section */}
-          <View style={styles.adRewardSection}>
+          <View style={styles.scriptingTimeSection}>
             <View style={styles.timeDisplay}>
               <Text style={styles.timeLabel}>
-                {t('Scripting Time & No-Ads Remaining:')}
+                {t('Scripting Time Remaining:')}
               </Text>
               <Text style={[styles.timeValue, !hasTime && styles.timeExpired]}>
                 {remainingTime}
@@ -834,17 +834,17 @@ export const ScriptingScreen: React.FC<Props> = ({
               <View style={masterToggleContentStyle}>
                 <Text style={[styles.timeLabel, titleSpacingStyle]}>
                   {scriptingTimeActive ? '✅ ' : ''}
-                  {t('Scripting Time & No-Ads Active')}
+                  {t('Scripting Time Active')}
                 </Text>
                 <Text style={[styles.subtitle, compactSubtitleStyle]}>
                   {t(
-                    'When ON: Time counts down, scripts can run, no banner ads',
+                    'When ON: scripting time counts down while scripts can run',
                   )}
                 </Text>
                 {hasUnlimitedScripting && (
                   <Text style={[styles.subtitle, italicSubtitleStyle]}>
                     {t(
-                      'Unlimited scripting: Toggle enables/disables no-ads mode',
+                      'Unlimited scripting: toggle controls scripting-time tracking',
                     )}
                   </Text>
                 )}
@@ -867,7 +867,7 @@ export const ScriptingScreen: React.FC<Props> = ({
                 }}
               >
                 <Text style={styles.upgradeButtonText}>
-                  💎 {t('Upgrade to Unlimited Scripting & No-Ads')}
+                  💎 {t('Upgrade to Unlimited Scripting')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -1531,7 +1531,7 @@ const createStyles = (colors: any) => {
     close: { color: colors.primary, fontWeight: '600' },
     scrollView: { flex: 1 },
     scrollContent: { padding: 16, paddingBottom: 32 },
-    adRewardSection: {
+    scriptingTimeSection: {
       backgroundColor: colors.surface,
       padding: 12,
       borderRadius: 8,
@@ -1587,14 +1587,6 @@ const createStyles = (colors: any) => {
       marginBottom: 6,
     },
     sourceContent: { padding: 16, minWidth: '100%' },
-    watchAdButton: {
-      backgroundColor: '#4CAF50',
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 8,
-      alignItems: 'center',
-      marginBottom: 8,
-    },
     generatorBody: { padding: 12, paddingBottom: 40 },
     generatorBlocker: {
       borderWidth: StyleSheet.hairlineWidth,
@@ -1679,8 +1671,6 @@ const createStyles = (colors: any) => {
       marginBottom: 10,
     },
     generatedCodeContent: { padding: 10 },
-    watchAdButtonDisabled: { backgroundColor: colors.border, opacity: 0.6 },
-    watchAdButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
     upgradeButton: {
       backgroundColor: '#FFB300',
       paddingVertical: 10,

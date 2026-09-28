@@ -424,7 +424,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
                 {'\n'}• {t('Network configurations')}
                 {'\n'}• {t('Identity profiles')}
                 {'\n'}• {t('Settings and preferences')}
-                {'\n'}• {t('Consent status')}
               </Text>
             </View>
 
@@ -441,7 +440,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
               </View>
               <Text style={styles.infoText}>
                 • {t('All local data (messages, settings, etc.)')}
-                {'\n'}• {t('Consent preferences (will be asked again)')}
                 {'\n'}• {t('Cached files')}
               </Text>
               <Text
@@ -468,8 +466,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
                 {t('Under GDPR and CCPA, you have the right to:')}
                 {'\n'}• {t('Access your data (Export)')}
                 {'\n'}• {t('Delete your data (Right to be forgotten)')}
-                {'\n'}• {t('Opt-out of data collection')}
-                {'\n'}• {t('Withdraw consent at any time')}
                 {'\n'}• {t('Data portability (Export to another service)')}
               </Text>
             </View>

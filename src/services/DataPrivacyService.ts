@@ -304,8 +304,6 @@ class DataPrivacyService {
     networksCount: number;
     identityProfilesCount: number;
     storageSize: string;
-    crashlyticsEnabled: boolean;
-    consentStatus: string;
   }> {
     try {
       const networks = await settingsService.loadNetworks();
@@ -340,8 +338,6 @@ class DataPrivacyService {
         networksCount: networks.length,
         identityProfilesCount: profiles.length,
         storageSize,
-        crashlyticsEnabled: false,
-        consentStatus: consentService.getConsentStatusText(),
       };
     } catch (error) {
       logger.error('privacy', `Failed to get data summary: ${String(error)}`);

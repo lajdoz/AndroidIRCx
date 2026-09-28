@@ -14,7 +14,6 @@ import {
   Alert,
   Image,
   ActivityIndicator,
-  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useTheme } from '../hooks/useTheme';
@@ -25,7 +24,6 @@ import type {
   IRCServerConfig,
 } from '../services/SettingsService';
 import { identityProfilesService } from '../services/IdentityProfilesService';
-import { consentService } from '../services/ConsentService';
 import { ModalSafeArea } from '../components/ModalSafeArea';
 
 interface FirstRunSetupScreenProps {
@@ -33,8 +31,7 @@ interface FirstRunSetupScreenProps {
   onSkip?: () => void;
 }
 
-type SetupStep =
-  'welcome' | 'privacy' | 'identity' | 'network' | 'channels' | 'complete';
+type SetupStep = 'welcome' | 'identity' | 'network' | 'channels' | 'complete';
 
 export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
   onComplete,
@@ -44,10 +41,6 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [step, setStep] = useState<SetupStep>('welcome');
-
-  // Privacy/consent state
-  const [consentLoading, setConsentLoading] = useState(false);
-  const [consentHandled, setConsentHandled] = useState(false);
 
   // Identity fields
   const [nickname, setNickname] = useState('AndroidIRCX');
@@ -68,17 +61,15 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
   const [channelsInput, setChannelsInput] = useState('#DBase, #AndroidIRCX');
 
   const getStepNumber = () => {
-    if (step === 'welcome') return '1/5';
-    if (step === 'privacy') return '2/5';
-    if (step === 'identity') return '3/5';
-    if (step === 'network') return '4/5';
-    if (step === 'channels') return '5/5';
+    if (step === 'welcome') return '1/4';
+    if (step === 'identity') return '2/4';
+    if (step === 'network') return '3/4';
+    if (step === 'channels') return '4/4';
     return '';
   };
 
   const getStepTitle = () => {
     if (step === 'welcome') return t('Welcome to AndroidIRCX');
-    if (step === 'privacy') return t('Privacy & Ads');
     if (step === 'identity') return t('Set Up Your Identity');
     if (step === 'network') return t('Choose Your Network');
     if (step === 'channels') return t('Choose Your Channels');
@@ -88,8 +79,6 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
 
   const handleNext = () => {
     if (step === 'welcome') {
-      setStep('privacy');
-    } else if (step === 'privacy') {
       setStep('identity');
     } else if (step === 'identity') {
       if (!nickname.trim()) {
@@ -116,10 +105,8 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
   };
 
   const handleBack = () => {
-    if (step === 'privacy') {
+    if (step === 'identity') {
       setStep('welcome');
-    } else if (step === 'identity') {
-      setStep('privacy');
     } else if (step === 'network') {
       setStep('identity');
     } else if (step === 'channels') {
@@ -296,212 +283,6 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
       </View>
     </ScrollView>
   );
-
-  const renderPrivacy = () => {
-    const handleAcceptAndContinue = async () => {
-      try {
-        setConsentLoading(true);
-
-        // Try to show the official consent form (for EU/EEA/UK/California users)
-        const formShown = await consentService.showConsentFormIfRequired();
-
-        if (!formShown) {
-          // If no form was required (user not in regulated region),
-          // show our own explanation and get acceptance
-          Alert.alert(
-            t('Privacy Agreement'),
-            t(
-              'By clicking Accept, you agree to:\n\n• Collection of device info, IP address, and location for ads\n• Use of Google Mobile Ads (personalized or non-personalized)\n• Our Privacy Policy and Terms\n\nYou can change these settings anytime in Settings > Privacy & Ads.',
-            ),
-            [
-              {
-                text: t('Read Privacy Policy'),
-                onPress: () => {
-                  const url = consentService.getPrivacyPolicyUrl();
-                  Linking.openURL(url).catch(() => {
-                    Alert.alert(
-                      t('Error'),
-                      t('Failed to open privacy policy.'),
-                    );
-                  });
-                },
-                style: 'default',
-              },
-              {
-                text: t('Accept & Continue'),
-                onPress: async () => {
-                  try {
-                    await consentService.acceptConsentManually();
-                    setConsentHandled(true);
-                  } catch (error) {
-                    console.error('Failed to save consent:', error);
-                    Alert.alert(
-                      t('Error'),
-                      t('Failed to save consent. Please try again.'),
-                    );
-                  }
-                },
-                style: 'default',
-              },
-            ],
-          );
-        } else {
-          // Form was shown and handled by Google UMP
-          setConsentHandled(true);
-        }
-      } catch (error) {
-        console.error('Consent error:', error);
-        // Even if there's an error, allow user to continue
-        setConsentHandled(true);
-      } finally {
-        setConsentLoading(false);
-      }
-    };
-
-    const handleOpenPrivacyPolicy = () => {
-      const url = consentService.getPrivacyPolicyUrl();
-      Linking.openURL(url).catch(() => {
-        Alert.alert(t('Error'), t('Failed to open privacy policy.'));
-      });
-    };
-
-    return (
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <Text style={styles.description}>
-          {t('AndroidIRCX is free to use, supported by ads')}
-        </Text>
-
-        <View style={styles.privacyCard}>
-          <Text style={styles.privacyTitle}>{t('What We Collect')}</Text>
-          <Text style={styles.privacyText}>
-            {t(
-              'To provide free features, we use Google Mobile Ads which may collect:',
-            )}
-          </Text>
-          <Text style={styles.privacyBullet}>• {t('Device information')}</Text>
-          <Text style={styles.privacyBullet}>
-            • {t('IP address and location')}
-          </Text>
-          <Text style={styles.privacyBullet}>• {t('Ad interaction data')}</Text>
-        </View>
-
-        <View style={styles.privacyCard}>
-          <Text style={styles.privacyTitle}>{t('Your Choices')}</Text>
-          <Text style={styles.privacyText}>
-            {t(
-              'You can choose personalized ads (better rewards) or non-personalized ads (more privacy).',
-            )}
-          </Text>
-          <Text style={[styles.privacyText, { marginTop: 8 }]}>
-            {t('You can change this anytime in Settings.')}
-          </Text>
-        </View>
-
-        {!consentHandled ? (
-          <View style={styles.privacyInfoBox}>
-            <View style={styles.privacyInfoTitleRow}>
-              <Icon
-                name="clipboard-list"
-                size={16}
-                color={colors.warning}
-                solid
-                style={styles.privacyInfoIcon}
-              />
-              <Text style={styles.privacyInfoTitle}>{t('Important')}</Text>
-            </View>
-            <Text style={styles.privacyInfoText}>
-              {t(
-                'You must accept our privacy terms to use this app. Click the button below to review and accept.',
-              )}
-            </Text>
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.privacyInfoBox,
-              {
-                backgroundColor: colors.primary + '20',
-                borderColor: colors.primary,
-              },
-            ]}
-          >
-            <View style={styles.privacyInfoTitleRow}>
-              <Icon
-                name="check-circle"
-                size={16}
-                color={colors.primary}
-                solid
-                style={styles.privacyInfoIcon}
-              />
-              <Text style={styles.privacyInfoTitle}>{t('Accepted')}</Text>
-            </View>
-            <Text style={styles.privacyInfoText}>
-              {t(
-                'You have accepted the privacy terms. You can change settings anytime in Settings.',
-              )}
-            </Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[
-            styles.consentButton,
-            consentHandled && styles.consentButtonAccepted,
-          ]}
-          onPress={handleAcceptAndContinue}
-          disabled={consentLoading || consentHandled}
-        >
-          {consentLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <View style={styles.consentButtonContent}>
-              <View style={styles.consentButtonTextRow}>
-                {consentHandled && (
-                  <Icon
-                    name="check"
-                    size={16}
-                    color="#fff"
-                    solid
-                    style={styles.consentButtonIcon}
-                  />
-                )}
-                <Text style={styles.consentButtonText}>
-                  {consentHandled
-                    ? t('Privacy Terms Accepted')
-                    : t('Accept Privacy Terms & Continue')}
-                </Text>
-              </View>
-              <Text style={styles.consentButtonSubtext}>
-                {consentHandled
-                  ? t('You can review or change in Settings')
-                  : t('Tap to review and accept (required to continue)')}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.privacyLink}
-          onPress={handleOpenPrivacyPolicy}
-        >
-          <Text style={styles.privacyLinkText}>
-            {t('📄 Read Full Privacy Policy')}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.complianceNote}>
-          <Text style={styles.complianceText}>
-            {t(
-              'We comply with GDPR, CCPA, and other privacy laws. Your data is protected.',
-            )}
-          </Text>
-        </View>
-      </ScrollView>
-    );
-  };
 
   const renderIdentity = () => (
     <ScrollView
@@ -827,8 +608,6 @@ export const FirstRunSetupScreen: React.FC<FirstRunSetupScreenProps> = ({
     switch (step) {
       case 'welcome':
         return renderWelcome();
-      case 'privacy':
-        return renderPrivacy();
       case 'identity':
         return renderIdentity();
       case 'network':
