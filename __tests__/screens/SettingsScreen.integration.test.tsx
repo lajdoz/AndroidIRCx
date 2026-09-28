@@ -283,7 +283,7 @@ jest.mock('../../src/components/settings/sections', () => {
         >
           <Text>Open Data Privacy</Text>
         </TouchableOpacity>
-</View>
+      </View>
     ),
     AboutSection: (props: any) => (
       <View>

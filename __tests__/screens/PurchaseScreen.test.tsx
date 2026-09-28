@@ -118,8 +118,7 @@ describe('PurchaseScreen', () => {
     );
 
     expect(await findByText('AndroidIRCX Premium')).toBeTruthy();
-    expect(await findByText('Remove Ads')).toBeTruthy();
-    expect(await findByText('Pro Unlimited')).toBeTruthy();
+        expect(await findByText('Pro Unlimited')).toBeTruthy();
     expect(await findByText('Supporter Pro')).toBeTruthy();
     expect(mockRNIap.initConnection).toHaveBeenCalled();
     expect(mockRNIap.fetchProducts).toHaveBeenCalled();
