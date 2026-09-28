@@ -115,13 +115,6 @@ class AdRewardService {
   async resetTime() { this.remainingMs = 0; this.lastUpdated = Date.now(); await this.save(); this.notifyListeners(); }
   async simulateFreshInstall() { await AsyncStorage.multiRemove([STORAGE_KEY, INITIAL_BONUS_KEY, VERSION_BONUS_KEY]); this.remainingMs = 0; this.lastUpdated = Date.now(); await this.load(); this.notifyListeners(); }
 
-  isAdReady(): boolean { return false; }
-  isAdLoading(): boolean { return false; }
-  isInCooldown(): boolean { return false; }
-  getCooldownRemaining(): number { return 0; }
-  getAdStatus() { return { ready: false, loading: false, cooldown: false, cooldownSeconds: 0, retryCount: 0, currentAdUnit: '', adUnitType: 'Disabled' }; }
-  async manualLoadAd() { return { success: false, messageKey: 'Ads are disabled', messageParams: {} }; }
-  async showRewardedAd() { return false; }
 }
 
 export const adRewardService = new AdRewardService();
