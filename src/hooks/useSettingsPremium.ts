@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { inAppPurchaseService } from '../services/InAppPurchaseService';
 import { settingsService } from '../services/SettingsService';
-import { useT } from '../i18n/localization';
 
 export interface UseSettingsPremiumReturn {
   // Premium status
@@ -32,20 +31,18 @@ export interface UseSettingsPremiumReturn {
 }
 
 export const useSettingsPremium = (): UseSettingsPremiumReturn => {
-  const t = useT();
-
   // Premium status
   const [hasNoAds, setHasNoAds] = useState(false);
   const [hasScriptingPro, setHasScriptingPro] = useState(false);
   const [isSupporter, setIsSupporter] = useState(false);
 
   // Ad status
-  const [adReady, setAdReady] = useState(false);
-  const [adLoading, setAdLoading] = useState(false);
-  const [adCooldown, setAdCooldown] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [showingAd, setShowingAd] = useState(false);
-  const [adUnitType, setAdUnitType] = useState<string>('Primary');
+  const [adReady, _setAdReady] = useState(false);
+  const [adLoading, _setAdLoading] = useState(false);
+  const [adCooldown, _setAdCooldown] = useState(false);
+  const [cooldownSeconds, _setCooldownSeconds] = useState(0);
+  const [showingAd, _setShowingAd] = useState(false);
+  const [adUnitType, _setAdUnitType] = useState<string>('Primary');
 
   // Watch ad button settings
   const [
@@ -66,10 +63,6 @@ export const useSettingsPremium = (): UseSettingsPremiumReturn => {
     return unsubscribe;
   }, []);
 
-  // Load ad status (polled every second). Guard against redundant updates: only
-  // push state when the ad-status snapshot actually changed, so a static status
-  // is a true no-op instead of re-rendering every tick — this keeps the poll from
-  // ever becoming an update loop (Crashlytics: "Maximum update depth exceeded").
   // Update watch ad button visibility based on premium status and settings
   useEffect(() => {
     const isPremium = hasNoAds || hasScriptingPro || isSupporter;
