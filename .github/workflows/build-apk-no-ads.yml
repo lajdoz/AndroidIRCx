@@ -99,7 +99,9 @@ jobs:
       - name: Verify no Google Mobile Ads dependency remains
         shell: bash
         run: |
-          if grep -R --exclude-dir=.git --exclude-dir=node_modules             -E 'react-native-google-mobile-ads|google-mobile-ads|BannerAd|RewardedAd|BannerAdService'             .; then
+          if grep -R --exclude-dir=.git --exclude-dir=node_modules \
+            -E 'react-native-google-mobile-ads|google-mobile-ads|BannerAd|RewardedAd|BannerAdService' \
+            src android package.json yarn.lock app.json 2>/dev/null; then
             echo "ERROR: advertising references remain in the source tree."
             exit 1
           fi
