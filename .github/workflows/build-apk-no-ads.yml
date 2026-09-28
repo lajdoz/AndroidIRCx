@@ -67,30 +67,6 @@ jobs:
             "ndk;${ANDROID_NDK}" \
             "cmake;3.22.1"
 
-      - name: Restore google-services.json from secret
-        shell: bash
-        env:
-          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
-        run: |
-          if [ -s android/app/google-services.json ]; then
-            exit 0
-          fi
-          if [ -z "$GOOGLE_SERVICES_JSON_B64" ]; then
-            echo "ERROR: GOOGLE_SERVICES_JSON_B64 is not configured."
-            exit 1
-          fi
-          mkdir -p android/app
-          printf '%s' "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
-
-      - name: Check Google Services configuration
-        shell: bash
-        run: |
-          if [ ! -s android/app/google-services.json ]; then
-            echo "ERROR: android/app/google-services.json is missing."
-            echo "Add the GOOGLE_SERVICES_JSON_B64 repository secret, or commit the file if appropriate for your fork."
-            exit 1
-          fi
-
       - name: Install JavaScript dependencies
         run: |
           for i in 1 2 3; do
