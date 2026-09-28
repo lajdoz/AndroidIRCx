@@ -12,7 +12,6 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.ReactPackage
-import com.google.firebase.FirebaseApp
 
 class MainApplication : Application(), ReactApplication {
 
@@ -44,7 +43,6 @@ class MainApplication : Application(), ReactApplication {
           } catch (e: ClassNotFoundException) {
               Log.e(TAG, "CRITICAL: Required React Native class not found: ${e.message}", e)
               // Report to Crashlytics if available (safely)
-              reportToCrashlyticsSafely(e)
               throw RuntimeException("React Native classes not available", e)
           }
 
@@ -58,14 +56,12 @@ class MainApplication : Application(), ReactApplication {
       } catch (e: NoClassDefFoundError) {
           Log.e(TAG, "CRITICAL: NoClassDefFoundError loading PackageList: ${e.message}", e)
           // Report to Crashlytics safely
-          reportToCrashlyticsSafely(e)
           // Fallback: return empty list - autolinking via Gradle should handle packages
           Log.w(TAG, "Falling back to empty package list - autolinking should handle packages")
           mutableListOf()
       } catch (e: Throwable) {
           Log.e(TAG, "Failed to get packages from PackageList: ${e.message}", e)
           // Report to Crashlytics safely
-          reportToCrashlyticsSafely(e)
           // Fallback: return empty list - autolinking via Gradle should handle packages
           mutableListOf()
       }
@@ -178,7 +174,6 @@ class MainApplication : Application(), ReactApplication {
       } catch (e: Throwable) {
           Log.e(TAG, "CRITICAL: Failed to initialize ReactHost: ${e.message}", e)
           // Report to Crashlytics safely
-          reportToCrashlyticsSafely(e)
           // Re-throw to prevent app from starting in broken state
           throw RuntimeException("Failed to initialize React Native", e)
       }
@@ -188,30 +183,6 @@ class MainApplication : Application(), ReactApplication {
      * Safely report exception to Crashlytics.
      * This method handles all possible exceptions to prevent secondary crashes.
      */
-    private fun reportToCrashlyticsSafely(exception: Throwable) {
-        try {
-            // Check if Firebase is initialized
-            if (!FirebaseApp.getApps(this).isEmpty()) {
-                try {
-                    val crashlytics =
-                        com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-                    crashlytics.recordException(exception)
-                    Log.d(TAG, "Exception reported to Crashlytics")
-                } catch (e: NoClassDefFoundError) {
-                    // Crashlytics classes not available - likely ProGuard issue
-                    Log.w(TAG, "Crashlytics classes not found (ProGuard issue?): ${e.message}")
-                } catch (e: Throwable) {
-                    // Any other error reporting to Crashlytics - don't fail
-                    Log.w(TAG, "Failed to report to Crashlytics: ${e.message}")
-                }
-            } else {
-                Log.d(TAG, "Firebase not initialized, skipping Crashlytics report")
-            }
-        } catch (e: Throwable) {
-            // Even checking Firebase can fail - don't propagate
-            Log.w(TAG, "Failed to check Firebase status: ${e.message}")
-        }
-    }
 
     private fun logNativeDiagnostics(stage: String) {
         try {
@@ -253,25 +224,6 @@ class MainApplication : Application(), ReactApplication {
                 // runtime is still loading classes, and recording that probe creates a
                 // misleading production issue even when startup continues successfully.
             }
-        }
-    }
-
-    private fun recordCrashlyticsKeys() {
-        try {
-            val crashlytics = com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-            crashlytics.setCustomKey("app_version", BuildConfig.VERSION_NAME)
-            crashlytics.setCustomKey("build_number", BuildConfig.VERSION_CODE)
-            crashlytics.setCustomKey(
-                "device_abis",
-                android.os.Build.SUPPORTED_ABIS.joinToString(", ")
-            )
-            crashlytics.setCustomKey(
-                "native_lib_dir",
-                applicationInfo?.nativeLibraryDir ?: "unknown"
-            )
-            crashlytics.setCustomKey("new_arch_enabled", true)
-        } catch (e: Throwable) {
-            Log.w(TAG, "Failed to set Crashlytics diagnostic keys: ${e.message}")
         }
     }
 
@@ -446,7 +398,6 @@ class MainApplication : Application(), ReactApplication {
             }
 
             Log.e(TAG, "Native load failed; clearing SoLoader cache before one retry", e)
-            reportToCrashlyticsSafely(e)
             val cleared = clearSoLoaderBackupCache("React Native native load failure")
             if (!cleared) {
                 throw e
@@ -470,28 +421,6 @@ class MainApplication : Application(), ReactApplication {
       logReactNativeClassDiagnostics("onCreate:begin", includeNative = false)
 
       try {
-          // Initialize Firebase first (before React Native)
-          Log.d(TAG, "Initializing Firebase...")
-          FirebaseApp.initializeApp(this)
-          Log.d(TAG, "Firebase initialized successfully")
-
-          // Enable Crashlytics collection (disabled by default in debug builds)
-          try {
-              val crashlytics = com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-              // Set custom keys for better crash reporting
-              recordCrashlyticsKeys()
-              Log.d(TAG, "Crashlytics configured successfully")
-          } catch (e: Throwable) {
-              Log.w(TAG, "Failed to configure Crashlytics: ${e.message}", e)
-              // Don't fail - Crashlytics is optional
-          }
-      } catch (e: Throwable) {
-          Log.e(TAG, "Failed to initialize Firebase: ${e.message}", e)
-          // Don't fail completely - Firebase is optional for basic functionality
-          // Don't try to report to Crashlytics here as it might not be initialized yet
-      }
-
-      try {
           // Initialize React Native
           Log.d(TAG, "Loading React Native...")
           loadReactNativeWithNativeCacheRecovery()
@@ -500,7 +429,6 @@ class MainApplication : Application(), ReactApplication {
           logReactNativeClassDiagnostics("onCreate:afterRN", includeNative = true)
       } catch (e: com.facebook.soloader.SoLoaderDSONotFoundError) {
           Log.e(TAG, "CRITICAL: Native library not found: ${e.message}", e)
-          reportToCrashlyticsSafely(e)
           // Try to provide more context about the ABI
           try {
               val abi = android.os.Build.SUPPORTED_ABIS.joinToString(", ")
@@ -511,12 +439,10 @@ class MainApplication : Application(), ReactApplication {
           throw RuntimeException("Native library not found - please reinstall the app", e)
       } catch (e: UnsatisfiedLinkError) {
           Log.e(TAG, "CRITICAL: Failed to link native library: ${e.message}", e)
-          reportToCrashlyticsSafely(e)
           throw RuntimeException("Native library linking failed - please reinstall the app", e)
       } catch (e: Throwable) {
           Log.e(TAG, "CRITICAL: Failed to load React Native: ${e.message}", e)
           // Report to Crashlytics safely
-          reportToCrashlyticsSafely(e)
           // Re-throw - app cannot function without React Native
           throw RuntimeException("Failed to load React Native", e)
       }
