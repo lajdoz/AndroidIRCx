@@ -311,11 +311,7 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
             </Text>
           </View>
 
-          {/* Privacy Controls Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('PRIVACY CONTROLS')}</Text>
-
-            {/* Data Actions Section */}
+          {/* Data Actions Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t('YOUR RIGHTS (GDPR/CCPA)')}
