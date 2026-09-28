@@ -151,13 +151,6 @@ function safeStringify(value: any): string {
   }
 }
 
-/**
- * Sanitize extras object to remove sensitive data before sending to remote crash reporting
- */
-function sanitizeExtras(extras: Record<string, any>): Record<string, any> {
-  return sanitizeValue(extras, '', 0, new WeakSet<object>());
-}
-
 export interface ErrorContext {
   fatal?: boolean;
   source?: string;
