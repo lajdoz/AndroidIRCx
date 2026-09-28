@@ -8,57 +8,13 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 ########################################
-# Firebase / Google Play Services
+# Google Play Integrity
 ########################################
 
-# Firebase App / App Check
--keep class com.google.firebase.appcheck.** { *; }
--keep class com.google.firebase.installations.** { *; }
--keep class com.google.firebase.appcheck.interop.** { *; }
--keep class com.google.firebase.appcheck.debug.** { *; }
--keep class com.google.firebase.appcheck.playintegrity.** { *; }
--dontwarn com.google.firebase.appcheck.**
-
-# Play Integrity
 -keep class com.google.android.play.core.integrity.** { *; }
 -keep class com.google.android.play.integrity.** { *; }
 -dontwarn com.google.android.play.core.integrity.**
 -dontwarn com.google.android.play.integrity.**
-
-# Firebase Crashlytics (OBAVEZNO)
--keepattributes SourceFile,LineNumberTable
--keepattributes *Annotation*
--keepattributes Exceptions, InnerClasses, Signature, EnclosingMethod
--keep class com.google.firebase.crashlytics.** { *; }
--dontwarn com.google.firebase.crashlytics.**
-
-# Keep Crashlytics internal classes used for stack trace capture
--keep class com.google.firebase.crashlytics.internal.** { *; }
--keep class com.google.firebase.crashlytics.internal.common.** { *; }
--keep class com.google.firebase.crashlytics.internal.model.** { *; }
--keep class com.google.firebase.crashlytics.internal.settings.** { *; }
-
-# Keep classes used by Crashlytics for thread stack trace capture
--keep class java.lang.Thread { *; }
--keep class java.lang.ThreadGroup { *; }
--keep class java.lang.StackTraceElement { *; }
--keep class java.lang.reflect.Method { *; }
--keep class dalvik.system.VMStack { *; }
-
-# Firebase Analytics
--keep class com.google.firebase.analytics.** { *; }
-
-# Google Play Services (Required for Firebase)
--keep class com.google.android.gms.** { *; }
--dontwarn com.google.android.gms.**
-
-# Keep GMS measurement/analytics classes specifically
--keep class com.google.android.gms.measurement.** { *; }
--keep class com.google.android.gms.common.** { *; }
-
-# Keep GMS tasks classes (used by Crashlytics)
--keep class com.google.android.gms.tasks.** { *; }
--dontwarn com.google.android.gms.tasks.**
 
 # Keep Parcelable classes and Creator fields
 -keepclassmembers class * implements android.os.Parcelable {
@@ -81,14 +37,6 @@
 -keep class android.content.pm.PackageInfo { *; }
 -keep class android.content.pm.SigningInfo { *; }
 -keep class android.content.pm.SigningDetails { *; }
-
-########################################
-# Google Mobile Ads
-########################################
-
--keep class com.google.android.gms.ads.** { *; }
--keep class com.google.ads.** { *; }
--dontwarn com.google.android.gms.ads.**
 
 ########################################
 # Kotlin / Coroutines
@@ -157,9 +105,6 @@
 -keep class com.reactnativecommunity.clipboard.** { *; }
 -dontwarn com.reactnativecommunity.clipboard.**
 
-# React Native Firebase
--keep class io.invertase.firebase.** { *; }
--dontwarn io.invertase.firebase.**
 
 # Battery Optimization Check
 -keep class com.batteryoptimizationcheck.** { *; }
@@ -177,9 +122,6 @@
 -keep class com.rnfs.** { *; }
 -dontwarn com.rnfs.**
 
-# Google Mobile Ads
--keep class com.reactnativegooglemobileads.** { *; }
--dontwarn com.reactnativegooglemobileads.**
 
 # In-App Purchase
 -keep class com.dooboolab.iap.** { *; }
@@ -259,15 +201,6 @@
 -dontwarn com.androidircx.**
 
 ########################################
-# OkHttp (used by Firebase)
-########################################
-
--dontwarn okhttp3.**
--dontwarn okio.**
--keep class okhttp3.** { *; }
--keep class okio.** { *; }
-
-########################################
 # General Android rules
 ########################################
 
@@ -295,23 +228,13 @@
 -keepattributes Exceptions, InnerClasses, Signature, *Annotation*, EnclosingMethod
 
 # Keep all classes used by VMStack.getThreadStackTrace() and Thread.getStackTrace()
-# These are critical for Crashlytics stack trace capture
 -keep class dalvik.system.** { *; }
 -keep class java.lang.** { *; }
 -keep class java.util.concurrent.** { *; }
 -keep class java.util.concurrent.locks.** { *; }
 -keep class java.lang.reflect.** { *; }
 
-# Keep Firebase concurrent classes (used by Crashlytics background threads)
--keep class com.google.firebase.concurrent.** { *; }
--dontwarn com.google.firebase.concurrent.**
 
-# Keep Firebase worker classes
--keep class com.google.firebase.crashlytics.internal.concurrency.** { *; }
--keep class com.google.firebase.crashlytics.internal.common.CrashlyticsWorker { *; }
--keep class com.google.firebase.crashlytics.internal.common.CrashlyticsReportDataCapture { *; }
--keep class com.google.firebase.crashlytics.internal.common.SessionReportingCoordinator { *; }
--keep class com.google.firebase.crashlytics.internal.common.CrashlyticsController { *; }
 
 # Keep all classes with native methods
 -keepclasseswithmembernames,includedescriptorclasses class * {
