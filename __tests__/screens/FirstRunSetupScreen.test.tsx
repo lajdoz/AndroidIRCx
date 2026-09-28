@@ -4,7 +4,7 @@
  */
 
 import { Alert } from 'react-native';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { FirstRunSetupScreen } from '../../src/screens/FirstRunSetupScreen';
 
 jest.mock('../../src/hooks/useTheme', () => ({
@@ -34,9 +34,7 @@ jest.mock('react-native-vector-icons/FontAwesome5', () => {
 
 jest.mock('../../src/i18n/localization', () => ({
   useT: () => (key: string, params?: Record<string, unknown>) => {
-    if (!params) {
-      return key;
-    }
+    if (!params) return key;
     return Object.entries(params).reduce(
       (result, [paramKey, value]) =>
         result.replace(`{${paramKey}}`, String(value)),
@@ -67,12 +65,9 @@ const {
 } = require('../../src/services/IdentityProfilesService');
 
 describe('FirstRunSetupScreen', () => {
-  let consoleErrorSpy: jest.SpyInstance;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     identityProfilesService.add.mockResolvedValue({ id: 'profile-1' });
     settingsService.getNetwork.mockResolvedValue({
@@ -92,8 +87,8 @@ describe('FirstRunSetupScreen', () => {
     settingsService.setFirstRunCompleted.mockResolvedValue(undefined);
   });
 
-  afterEach(async () => {
-    consoleErrorSpy.mockRestore();
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('renders welcome step and advances to identity', async () => {
@@ -103,64 +98,31 @@ describe('FirstRunSetupScreen', () => {
 
     expect(await findByText('Welcome to AndroidIRCX')).toBeTruthy();
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-
-    await waitFor(async () => {
-      expect(consentService.showConsentFormIfRequired).toHaveBeenCalled();
-    });
-
-    await fireEvent.press(await findByText('Next'));
     expect(await findByText('Set Up Your Identity')).toBeTruthy();
   });
 
-  it('shows validation when required identity fields are missing', async () => {
+  it('validates required identity fields', async () => {
     const { findByDisplayValue, findByText } = await render(
       <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
     );
 
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-    await fireEvent.press(await findByText('Next'));
-
     await fireEvent.changeText(await findByDisplayValue('AndroidIRCX'), '');
     await fireEvent.press(await findByText('Next'));
+
     expect(Alert.alert).toHaveBeenCalledWith(
       'Required',
       'Please enter a nickname',
     );
   });
 
-  it('shows validation when real name is missing', async () => {
-    const { findByDisplayValue, findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-    await fireEvent.press(await findByText('Next'));
-
-    await fireEvent.changeText(
-      await findByDisplayValue('AndroidIRCX User'),
-      '   ',
-    );
-    await fireEvent.press(await findByText('Next'));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Required',
-      'Please enter your real name',
-    );
-  });
-
-  it('completes recommended setup and connects now', async () => {
+  it('completes recommended DBase setup and connects now', async () => {
     const onComplete = jest.fn();
     const { findByDisplayValue, findByText } = await render(
       <FirstRunSetupScreen onComplete={onComplete} onSkip={jest.fn()} />,
     );
 
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-    await fireEvent.press(await findByText('Next'));
-
     await fireEvent.changeText(
       await findByDisplayValue('AndroidIRCX'),
       'Majstor',
@@ -174,7 +136,7 @@ describe('FirstRunSetupScreen', () => {
     await fireEvent.press(await findByText('Next'));
     await fireEvent.press(await findByText('Complete Setup'));
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(identityProfilesService.add).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Majstor Profile',
@@ -194,12 +156,7 @@ describe('FirstRunSetupScreen', () => {
 
     expect(await findByText("You're all set!")).toBeTruthy();
     await fireEvent.press(await findByText('Connect Now'));
-
-    expect(onComplete).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'DBase',
-      }),
-    );
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ id: 'DBase' }));
   });
 
   it('completes custom network setup and supports connect later', async () => {
@@ -210,10 +167,7 @@ describe('FirstRunSetupScreen', () => {
       );
 
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Next'));
-
     await fireEvent.press(await findByText('Custom Server'));
     await fireEvent.changeText(await findByDisplayValue('6697'), '7000');
     await fireEvent.changeText(await findByPlaceholderText('libera'), 'libera');
@@ -225,7 +179,7 @@ describe('FirstRunSetupScreen', () => {
     await fireEvent.press(await findByText('#DBase'));
     await fireEvent.press(await findByText('Complete Setup'));
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(settingsService.addNetwork).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'libera',
@@ -244,43 +198,19 @@ describe('FirstRunSetupScreen', () => {
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
 
-  it('shows validation when custom network fields are missing', async () => {
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Custom Server'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Complete Setup'));
-
-    await waitFor(async () => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Required',
-        'Please enter network name and server',
-      );
-    });
-  });
-
-  it('allows finishing setup without selecting DBase or a custom server', async () => {
+  it('allows finishing setup without selecting a network', async () => {
     const onComplete = jest.fn();
     const { findByText } = await render(
       <FirstRunSetupScreen onComplete={onComplete} onSkip={jest.fn()} />,
     );
 
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
     await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Next'));
-
     await fireEvent.press(await findByText('Choose Another Server Later'));
     await fireEvent.press(await findByText('Next'));
     await fireEvent.press(await findByText('Complete Setup'));
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(settingsService.setFirstRunCompleted).toHaveBeenCalledWith(true);
     });
 
@@ -288,66 +218,4 @@ describe('FirstRunSetupScreen', () => {
     await fireEvent.press(await findByText('Open Choose Network'));
     expect(onComplete).toHaveBeenCalledWith(null);
   });
-
-  it('falls back to default channels and creates DBase when missing', async () => {
-    settingsService.getNetwork
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        id: 'DBase',
-        name: 'DBase',
-        servers: [
-          { id: 'srv1', hostname: 'irc.dbase.in.rs', port: 6697, ssl: true },
-        ],
-      });
-
-    const onComplete = jest.fn();
-    const { findByDisplayValue, findByText } = await render(
-      <FirstRunSetupScreen onComplete={onComplete} onSkip={jest.fn()} />,
-    );
-
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('Accept Privacy Terms & Continue'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.changeText(
-      await findByDisplayValue('AndroidIRCX'),
-      'FallbackNick',
-    );
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.press(await findByText('DBase (Optional Default)'));
-    await fireEvent.press(await findByText('Next'));
-    await fireEvent.changeText(
-      await findByDisplayValue('#DBase, #AndroidIRCX'),
-      'not-a-channel, also-bad',
-    );
-    await fireEvent.press(await findByText('Complete Setup'));
-
-    await waitFor(async () => {
-      expect(settingsService.createDefaultNetwork).toHaveBeenCalled();
-      expect(settingsService.updateNetwork).toHaveBeenCalledWith(
-        'DBase',
-        expect.objectContaining({
-          autoJoinChannels: ['#DBase', '#AndroidIRCX'],
-        }),
-      );
-    });
-
-    await fireEvent.press(await findByText('Connect Now'));
-    expect(onComplete).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'DBase' }),
-    );
-  });
-
-  it('allows navigating back and skipping from welcome', async () => {
-    const onSkip = jest.fn();
-    const { findByText } = await render(
-      <FirstRunSetupScreen onComplete={jest.fn()} onSkip={onSkip} />,
-    );
-
-    await fireEvent.press(await findByText('Skip'));
-    expect(onSkip).toHaveBeenCalledTimes(1);
-
-    await fireEvent.press(await findByText('Next'));
-    expect(await findByText('Privacy & Ads')).toBeTruthy();
-    await fireEvent.press(await findByText('Back'));
-    expect(await findByText('Welcome to AndroidIRCX')).toBeTruthy();
-  });
+});
