@@ -94,7 +94,7 @@ class AdRewardService {
       const now = Date.now();
       this.remainingMs = Math.max(0, this.remainingMs - (now - this.lastUpdated));
       this.lastUpdated = now;
-      if (Math.floor(this.remainingMs / 1000) % 10 === 0) void this.save();
+      if (Math.floor(this.remainingMs / 1000) % 10 === 0) this.save().catch(() => undefined);
       this.notifyListeners();
     }, 1000);
     this.notifyListeners();
@@ -104,7 +104,7 @@ class AdRewardService {
     if (!this.usageInterval) return;
     clearInterval(this.usageInterval);
     this.usageInterval = null;
-    void this.save();
+    this.save().catch(() => undefined);
     this.notifyListeners();
   }
 
