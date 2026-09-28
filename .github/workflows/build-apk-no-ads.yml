@@ -61,11 +61,19 @@ jobs:
           sdkmanager             "platform-tools"             "platforms;android-${ANDROID_API}"             "build-tools;${ANDROID_BUILD_TOOLS}"             "ndk;${ANDROID_NDK}"             "cmake;3.22.1"
 
       - name: Restore google-services.json from secret
-        if: ${{ !hashFiles('android/app/google-services.json') && secrets.GOOGLE_SERVICES_JSON_B64 != '' }}
         shell: bash
+        env:
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
         run: |
+          if [ -s android/app/google-services.json ]; then
+            exit 0
+          fi
+          if [ -z "$GOOGLE_SERVICES_JSON_B64" ]; then
+            echo "ERROR: GOOGLE_SERVICES_JSON_B64 is not configured."
+            exit 1
+          fi
           mkdir -p android/app
-          echo '${{ secrets.GOOGLE_SERVICES_JSON_B64 }}' | base64 --decode > android/app/google-services.json
+          printf '%s' "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
 
       - name: Check Google Services configuration
         shell: bash
