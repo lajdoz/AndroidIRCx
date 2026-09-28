@@ -47,7 +47,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
   useEffect(() => {
     if (visible) {
       loadDataSummary();
-      loadCrashlyticsPreference();
     }
   }, [visible]);
 
