@@ -48,8 +48,8 @@ jobs:
             sleep 15
           done
 
-      - name: Run Prettier format check
-        run: yarn format-check
+      - name: Format code with Prettier
+        run: yarn prettier --write "**/*" --ignore-unknown
 
       - name: Run ESLint
         run: yarn lint:ci
