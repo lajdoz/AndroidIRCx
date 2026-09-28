@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Switch,
   Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -36,13 +35,12 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [loading, setLoading] = useState(false);
-  const [crashlyticsOptOut, setCrashlyticsOptOut] = useState(false);
   const [dataSummary, setDataSummary] = useState({
     messagesCount: 0,
     networksCount: 0,
     identityProfilesCount: 0,
     storageSize: '0 KB',
-    crashlyticsEnabled: true,
+    crashlyticsEnabled: false,
     consentStatus: 'Unknown',
   });
 
@@ -59,15 +57,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
       setDataSummary(summary);
     } catch (error) {
       console.error('Failed to load data summary:', error);
-    }
-  };
-
-  const loadCrashlyticsPreference = async () => {
-    try {
-      const optOut = await dataPrivacyService.getCrashlyticsOptOut();
-      setCrashlyticsOptOut(optOut);
-    } catch (error) {
-      console.error('Failed to load crashlytics preference:', error);
     }
   };
 
@@ -261,29 +250,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
     }
   };
 
-  const handleToggleCrashlytics = async (value: boolean) => {
-    try {
-      setLoading(true);
-      await dataPrivacyService.setCrashlyticsOptOut(value);
-      setCrashlyticsOptOut(value);
-
-      Alert.alert(
-        t('Setting Updated'),
-        value
-          ? t(
-              'Crash reporting has been disabled. New crashes will not be collected.',
-            )
-          : t(
-              'Crash reporting has been enabled. This helps improve app stability.',
-            ),
-      );
-    } catch {
-      Alert.alert(t('Error'), t('Failed to update crash reporting setting.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!visible) return null;
 
   return (
@@ -340,7 +306,7 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
 
             <Text style={styles.sectionNote}>
               {t(
-                'This shows data stored locally on your device. Third-party services (Google AdMob, Firebase) may have their own data retention policies.',
+                'This shows data stored locally on your device.',
               )}
             </Text>
           </View>
@@ -349,35 +315,7 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('PRIVACY CONTROLS')}</Text>
 
-            {/* Crashlytics Opt-Out */}
-            <View style={styles.controlCard}>
-              <View style={styles.controlHeader}>
-                <View style={styles.controlTextContainer}>
-                  <Text style={styles.controlTitle}>
-                    {t('Crash Reporting')}
-                  </Text>
-                  <Text style={styles.controlDescription}>
-                    {t(
-                      'Send anonymous crash reports to help improve app stability',
-                    )}
-                  </Text>
-                </View>
-                <Switch
-                  value={!crashlyticsOptOut}
-                  onValueChange={value => handleToggleCrashlytics(!value)}
-                  disabled={loading}
-                />
-              </View>
-            </View>
-
-            <Text style={styles.sectionNote}>
-              {t(
-                'When disabled, crash reports will not be collected. This may make it harder to fix bugs you encounter.',
-              )}
-            </Text>
-          </View>
-
-          {/* Data Actions Section */}
+            {/* Data Actions Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t('YOUR RIGHTS (GDPR/CCPA)')}
@@ -523,7 +461,7 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
                 style={[styles.infoText, { marginTop: 8, fontStyle: 'italic' }]}
               >
                 {t(
-                  'Note: Data already sent to Google (AdMob, Crashlytics) cannot be deleted via this app, but will be automatically deleted per their retention policies (14-90 days).',
+                  'Note: This app no longer sends analytics, advertising, or crash-reporting data to Google services.',
                 )}
               </Text>
             </View>
