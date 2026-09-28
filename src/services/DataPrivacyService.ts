@@ -10,7 +10,6 @@ import { Platform } from 'react-native';
 import { settingsService } from './SettingsService';
 import { messageHistoryService } from './MessageHistoryService';
 import { identityProfilesService } from './IdentityProfilesService';
-import { consentService } from './ConsentService';
 import { logger } from './Logger';
 
 export interface ExportedData {
@@ -21,7 +20,6 @@ export interface ExportedData {
     networks: any[];
     identityProfiles: any[];
     messageHistory: any[];
-    consentStatus: string;
   };
 }
 
@@ -32,7 +30,6 @@ export interface DataDeletionResult {
     settings: boolean;
     networks: boolean;
     identityProfiles: boolean;
-    consent: boolean;
     cache: boolean;
   };
   errors: string[];
@@ -59,7 +56,6 @@ class DataPrivacyService {
           networks: await this.getNetworksData(),
           identityProfiles: await this.getIdentityProfilesData(),
           messageHistory: await this.getMessageHistoryData(),
-          consentStatus: consentService.getConsentStatusText(),
         },
       };
 
@@ -118,7 +114,6 @@ class DataPrivacyService {
         settings: false,
         networks: false,
         identityProfiles: false,
-        consent: false,
         cache: false,
       },
       errors: [],
@@ -200,23 +195,9 @@ class DataPrivacyService {
         result.success = false;
       }
 
-      // 4. Reset consent
+      // 4. Clear all AsyncStorage (settings, preferences, etc.)
       try {
-        logger.info('privacy', '[4/6] Resetting consent preferences...');
-        await consentService.resetConsent();
-        result.deletedItems.consent = true;
-        logger.info('privacy', '✓ Consent preferences reset successfully');
-      } catch (error) {
-        const errorMsg = `Consent: ${String(error)}`;
-        logger.error('privacy', `✗ ${errorMsg}`);
-        console.error('[DataPrivacy] Consent reset failed:', error);
-        result.errors.push(errorMsg);
-        result.success = false;
-      }
-
-      // 5. Clear all AsyncStorage (settings, preferences, etc.)
-      try {
-        logger.info('privacy', '[5/6] Clearing AsyncStorage...');
+        logger.info('privacy', '[4/5] Clearing AsyncStorage...');
         const keys = await AsyncStorage.getAllKeys();
         logger.info('privacy', `Found ${keys.length} storage keys`);
 
@@ -243,7 +224,7 @@ class DataPrivacyService {
 
       // 6. Clear cache directory
       try {
-        logger.info('privacy', '[6/6] Clearing cache directory...');
+        logger.info('privacy', '[5/5] Clearing cache directory...');
         const cacheDir = RNFS.CachesDirectoryPath;
         logger.info('privacy', `Cache directory: ${cacheDir}`);
 

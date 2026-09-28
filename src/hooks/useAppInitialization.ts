@@ -5,7 +5,6 @@
 
 import { useEffect } from 'react';
 import RNBootSplash from 'react-native-bootsplash';
-import { consentService } from '../services/ConsentService';
 import { adRewardService } from '../services/AdRewardService';
 import { inAppPurchaseService } from '../services/InAppPurchaseService';
 import { errorReportingService } from '../services/ErrorReportingService';
@@ -42,7 +41,6 @@ export function useAppInitialization() {
     // Initialize local privacy consent and application services.
     const initServices = async () => {
       try {
-        await consentService.initialize(__DEV__);
         await adRewardService.initialize();
         await inAppPurchaseService.initialize();
         await soundService.initialize();

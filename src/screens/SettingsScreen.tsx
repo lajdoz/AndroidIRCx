@@ -186,7 +186,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   );
   const aboutTitle = t('About', { _tags: tags });
   const helpTitle = t('📖 Help & Documentation', { _tags: tags });
-  const scriptingAdsTitle = t('Scripting & Ads', { _tags: tags });
+  const scriptingAdsTitle = t('Scripting', { _tags: tags });
   const aiTitle = t('AI', { _tags: tags });
   const premiumTitle = t('💎 Premium', { _tags: tags });
   const connectionTitle = t('Connection & Network', { _tags: tags });
@@ -292,20 +292,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   useSettingsSecurity();
 
   // Extract values from hooks for backward compatibility
-  const {
-    watchAdButtonEnabledForPremium,
-    setWatchAdButtonEnabledForPremium,
-    hasNoAds,
-    hasScriptingPro,
-    isSupporter,
-    adReady,
-    adLoading,
-    adCooldown,
-    cooldownSeconds,
-    showingAd,
-    showWatchAdButton,
-    handleWatchAd,
-  } = premiumSettings;
+  const { hasNoAds, hasScriptingPro, isSupporter } = premiumSettings;
 
   const [zncPurchaseToken, setZncPurchaseToken] = useState('');
   const [zncSubscriptionId, setZncSubscriptionId] = useState(
@@ -401,7 +388,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     : [];
   const isMountedRef = useRef(false);
 
-  // Premium and ad status now managed by useSettingsPremium hook
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -417,7 +403,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setChannelNotifList(notificationService.listChannelPreferences());
   }, []);
 
-  // handleWatchAd now comes from useSettingsPremium hook
   // DCC settings now managed by ConnectionNetworkSection
   const [, setNoticeTarget] = useState<
     'active' | 'server' | 'notice' | 'private'
@@ -2633,46 +2618,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             'scripts',
           ],
         },
-        {
-          id: 'watch-ad-button-premium',
-          title: t('Show Watch Ad Button (Premium)', { _tags: tags }),
-          description:
-            hasNoAds || hasScriptingPro || isSupporter
-              ? t(
-                  'Enable watch ad button to support the project (you have premium plan)',
-                  { _tags: tags },
-                )
-              : t('Always shown for normal users', { _tags: tags }),
-          type: 'switch' as const,
-          value: watchAdButtonEnabledForPremium,
-          onValueChange: async (value: boolean | string) => {
-            await setWatchAdButtonEnabledForPremium(value as boolean);
-          },
-          disabled: !(hasNoAds || hasScriptingPro || isSupporter),
-          searchKeywords: [
-            'watch',
-            'ad',
-            'button',
-            'premium',
-            'ads',
-            'advertising',
-            'support',
-          ],
-        },
-        {
-          id: 'watch-ad-button',
-          title: 'watch-ad-button',
-          type: 'custom' as const,
-          searchKeywords: [
-            'watch',
-            'ad',
-            'reward',
-            'video',
-            'ads',
-            'time',
-            'scripting',
-          ],
-        },
       ],
     },
     {
@@ -3117,38 +3062,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         );
       }
 
-      // Custom render function for special cases like watch-ad-button
-      if (item.id === 'watch-ad-button' && showWatchAdButton) {
-        return (
-          <View key={item.id} style={styles.settingItem}>
-            <TouchableOpacity
-              style={[
-                styles.watchAdButton,
-                showingAd && styles.watchAdButtonDisabled,
-              ]}
-              onPress={handleWatchAd}
-              disabled={showingAd}
-            >
-              {showingAd ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.watchAdButtonText}>
-                  {adReady
-                    ? t('Watch Ad (+60 min Scripting & No-Ads)')
-                    : adCooldown
-                      ? t('Cooldown ({cooldownSeconds}s)').replace(
-                          '{cooldownSeconds}',
-                          cooldownSeconds.toString(),
-                        )
-                      : adLoading
-                        ? t('Loading Ad...')
-                        : t('Request Ad')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        );
-      }
       return null;
     }
 

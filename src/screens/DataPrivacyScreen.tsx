@@ -40,8 +40,6 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
     networksCount: 0,
     identityProfilesCount: 0,
     storageSize: '0 KB',
-    crashlyticsEnabled: false,
-    consentStatus: 'Unknown',
   });
 
   useEffect(() => {
@@ -295,13 +293,7 @@ export const DataPrivacyScreen: React.FC<DataPrivacyScreenProps> = ({
                   {dataSummary.storageSize}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('Ad Consent')}:</Text>
-                <Text style={styles.summaryValue}>
-                  {dataSummary.consentStatus}
-                </Text>
-              </View>
-            </View>
+  </View>
 
             <Text style={styles.sectionNote}>
               {t(

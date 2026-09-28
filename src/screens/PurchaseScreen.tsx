@@ -19,7 +19,6 @@ import { useTheme } from '../hooks/useTheme';
 import { ModalSafeArea } from '../components/ModalSafeArea';
 import {
   inAppPurchaseService,
-  PRODUCT_REMOVE_ADS,
   PRODUCT_PRO_UNLIMITED,
   PRODUCT_SUPPORTER_PRO,
   PRODUCT_CATALOG,
@@ -40,11 +39,7 @@ type ProductListItem = {
   price?: string | number | null;
 };
 
-const skuList = [
-  PRODUCT_REMOVE_ADS,
-  PRODUCT_PRO_UNLIMITED,
-  PRODUCT_SUPPORTER_PRO,
-];
+const skuList = [PRODUCT_PRO_UNLIMITED, PRODUCT_SUPPORTER_PRO];
 const getPurchaseReceipt = (purchase: Purchase): string =>
   purchase.purchaseToken ||
   ((purchase as Purchase & { transactionReceipt?: string })
@@ -59,7 +54,6 @@ export const PurchaseScreen: React.FC<PurchaseScreenProps> = ({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const tRef = useRef(t);
-  const [hasRemoveAds, setHasRemoveAds] = useState(false);
   const [hasProUnlimited, setHasProUnlimited] = useState(false);
   const [hasSupporterPro, setHasSupporterPro] = useState(false);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -259,7 +253,6 @@ export const PurchaseScreen: React.FC<PurchaseScreenProps> = ({
   // Update purchase state
   useEffect(() => {
     const updatePurchaseState = () => {
-      setHasRemoveAds(inAppPurchaseService.hasPurchased(PRODUCT_REMOVE_ADS));
       setHasProUnlimited(
         inAppPurchaseService.hasPurchased(PRODUCT_PRO_UNLIMITED),
       );
@@ -426,7 +419,6 @@ export const PurchaseScreen: React.FC<PurchaseScreenProps> = ({
             </View>
           ) : (
             <>
-              {renderProductCard(PRODUCT_REMOVE_ADS, hasRemoveAds)}
               {renderProductCard(PRODUCT_PRO_UNLIMITED, hasProUnlimited, true)}
               {renderProductCard(PRODUCT_SUPPORTER_PRO, hasSupporterPro)}
             </>

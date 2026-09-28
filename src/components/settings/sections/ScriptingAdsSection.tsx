@@ -49,9 +49,9 @@ export const ScriptingAdsSection: React.FC<ScriptingAdsSectionProps> = ({
   const sectionData: SettingItemType[] = [
     {
       id: 'advanced-scripts',
-      title: t('Scripts (Scripting Time & No-Ads)', { _tags: tags }),
+      title: t('Scripts (Scripting Time)', { _tags: tags }),
       description: t(
-        'Manage IRC scripts and automation. Scripting time is also ad-free time.',
+        'Manage IRC scripts and automation and manage your available scripting time.',
         { _tags: tags },
       ),
       type: 'button',
@@ -60,8 +60,6 @@ export const ScriptingAdsSection: React.FC<ScriptingAdsSectionProps> = ({
         'scripting',
         'automation',
         'time',
-        'no-ads',
-        'ad-free',
         'premium',
         'manage',
       ],
