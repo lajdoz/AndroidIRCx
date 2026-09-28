@@ -66,7 +66,7 @@ class ConsentService {
   async resetConsent(): Promise<void> {
     this.consentStatus = 'UNKNOWN';
     this.manuallyAccepted = false;
-    await AsyncStorage.multiRemove([STORAGE_KEY, CONSENT_STATUS_KEY, MANUAL_CONSENT_KEY]);
+    await Promise.all([STORAGE_KEY, CONSENT_STATUS_KEY, MANUAL_CONSENT_KEY].map(key => AsyncStorage.removeItem(key)));
     this.notifyListeners();
   }
 
