@@ -288,16 +288,6 @@ jest.mock('./src/hooks/useSettingsPremium', () => ({
     hasNoAds: false,
     hasScriptingPro: false,
     isSupporter: false,
-    adReady: false,
-    adLoading: false,
-    adCooldown: false,
-    cooldownSeconds: 0,
-    adUnitType: 'Primary',
-    showingAd: false,
-    watchAdButtonEnabledForPremium: false,
-    showWatchAdButton: true,
-    setWatchAdButtonEnabledForPremium: jest.fn().mockResolvedValue(undefined),
-    handleWatchAd: jest.fn().mockResolvedValue(undefined),
   })),
 }));
 
@@ -475,53 +465,6 @@ jest.mock(
   'react-native-safe-area-context',
   () => require('react-native-safe-area-context/jest/mock').default,
 );
-
-jest.mock('@react-native-firebase/app', () => ({
-  getApp: jest.fn(() => ({})),
-  default: {},
-}));
-
-// v26 modular App Check API
-jest.mock('@react-native-firebase/app-check', () => {
-  const appCheckInstance = {
-    getToken: jest.fn(() => Promise.resolve({ token: 'mock-token' })),
-    getLimitedUseToken: jest.fn(() => Promise.resolve({ token: 'mock-token' })),
-    setTokenAutoRefreshEnabled: jest.fn(),
-  };
-  return {
-    __esModule: true,
-    initializeAppCheck: jest.fn(() => appCheckInstance),
-    getToken: jest.fn(() => Promise.resolve({ token: 'mock-token' })),
-    getLimitedUseToken: jest.fn(() => Promise.resolve({ token: 'mock-token' })),
-    setTokenAutoRefreshEnabled: jest.fn(),
-    onTokenChanged: jest.fn(() => jest.fn()),
-    ReactNativeFirebaseAppCheckProvider: jest.fn(() => ({
-      configure: jest.fn(),
-      getToken: jest.fn(() => Promise.resolve('mock-token')),
-    })),
-    CustomProvider: jest.fn(),
-  };
-});
-
-// v26 modular Crashlytics API
-jest.mock('@react-native-firebase/crashlytics', () => {
-  const instance = {};
-  return {
-    __esModule: true,
-    getCrashlytics: jest.fn(() => instance),
-    setUserId: jest.fn(() => Promise.resolve(null)),
-    setAttribute: jest.fn(() => Promise.resolve(null)),
-    setAttributes: jest.fn(() => Promise.resolve(null)),
-    log: jest.fn(),
-    recordError: jest.fn(),
-    setCrashlyticsCollectionEnabled: jest.fn(() => Promise.resolve(null)),
-    crash: jest.fn(),
-    checkForUnsentReports: jest.fn(() => Promise.resolve(false)),
-    deleteUnsentReports: jest.fn(() => Promise.resolve()),
-    sendUnsentReports: jest.fn(),
-    didCrashOnPreviousExecution: jest.fn(() => Promise.resolve(false)),
-  };
-});
 
 jest.mock('react-native-libsodium', () => {
   const makeBytes = (len: number, filler = 1) =>
