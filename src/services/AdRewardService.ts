@@ -113,7 +113,7 @@ class AdRewardService {
   private notifyListeners() { this.listeners.forEach(listener => { try { listener(this.remainingMs); } catch (error) { logger.error('scripting-time', `Listener error: ${String(error)}`); } }); }
   async grantTime(hours: number) { this.remainingMs += hours * HOUR_IN_MS; this.lastUpdated = Date.now(); await this.save(); this.notifyListeners(); }
   async resetTime() { this.remainingMs = 0; this.lastUpdated = Date.now(); await this.save(); this.notifyListeners(); }
-  async simulateFreshInstall() { await AsyncStorage.multiRemove([STORAGE_KEY, INITIAL_BONUS_KEY, VERSION_BONUS_KEY]); this.remainingMs = 0; this.lastUpdated = Date.now(); await this.load(); this.notifyListeners(); }
+  async simulateFreshInstall() { await Promise.all([STORAGE_KEY, INITIAL_BONUS_KEY, VERSION_BONUS_KEY].map(key => AsyncStorage.removeItem(key))); this.remainingMs = 0; this.lastUpdated = Date.now(); await this.load(); this.notifyListeners(); }
 
 }
 
