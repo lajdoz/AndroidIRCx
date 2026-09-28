@@ -206,12 +206,6 @@ export const ScriptingScreen: React.FC<Props> = ({
   const [hasTime, setHasTime] = useState<boolean>(false);
   const [hasUnlimitedScripting, setHasUnlimitedScripting] =
     useState<boolean>(false);
-  const [adReady, setAdReady] = useState<boolean>(false);
-  const [adLoading, setAdLoading] = useState<boolean>(false);
-  const [adCooldown, setAdCooldown] = useState<boolean>(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
-  const [showingAd, setShowingAd] = useState<boolean>(false);
-  const [adUnitType, setAdUnitType] = useState<string>('Primary');
   const [scriptingTimeActive, setScriptingTimeActive] =
     useState<boolean>(false);
   const [addonSafeMode, setAddonSafeMode] = useState(false);
@@ -318,12 +312,6 @@ export const ScriptingScreen: React.FC<Props> = ({
     setDisabledAddonCount(safety.disabled.size);
     setInstalledAddons(addonManagementService.list());
 
-    const adStatus = adRewardService.getAdStatus();
-    setAdReady(adStatus.ready);
-    setAdLoading(adStatus.loading);
-    setAdCooldown(adStatus.cooldown);
-    setCooldownSeconds(adStatus.cooldownSeconds);
-    setAdUnitType(adStatus.adUnitType);
   }, []);
 
   const refreshAddons = useCallback(async () => {
@@ -481,45 +469,6 @@ export const ScriptingScreen: React.FC<Props> = ({
     }
   }, [visible, refresh]);
 
-  useEffect(() => {
-    if (!visible) return;
-
-    // Listen for time changes
-    const unsubscribe = adRewardService.addListener(remainingMs => {
-      setRemainingTime(adRewardService.getRemainingTimeFormatted());
-      setHasTime(adRewardService.hasAvailableTime());
-
-      // Update ad status
-      const adStatus = adRewardService.getAdStatus();
-      setAdReady(adStatus.ready);
-      setAdLoading(adStatus.loading);
-      setAdCooldown(adStatus.cooldown);
-      setCooldownSeconds(adStatus.cooldownSeconds);
-      setAdUnitType(adStatus.adUnitType);
-
-      // Refresh scripts list if time runs out to show disabled state
-      if (remainingMs === 0) {
-        setScripts(scriptingService.list());
-      }
-    });
-
-    // Update ad status and tracking status periodically (every second for countdown)
-    const interval = setInterval(() => {
-      const adStatus = adRewardService.getAdStatus();
-      setAdReady(adStatus.ready);
-      setAdLoading(adStatus.loading);
-      setAdCooldown(adStatus.cooldown);
-      setCooldownSeconds(adStatus.cooldownSeconds);
-      setAdUnitType(adStatus.adUnitType);
-      setScriptingTimeActive(adRewardService.isTracking());
-    }, 1000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(interval);
-    };
-  }, [visible]);
-
   const toggleScriptingTimeActive = useCallback((value: boolean) => {
     if (value) {
       // Start scripting time tracking (also enables no-ads mode)
@@ -544,55 +493,6 @@ export const ScriptingScreen: React.FC<Props> = ({
       );
       setScripts(scriptingService.list());
     }
-  };
-
-  const handleWatchAd = async () => {
-    console.log('👆 Watch Ad button clicked');
-    console.log('Current state:', {
-      adReady,
-      adLoading,
-      adCooldown,
-      showingAd,
-    });
-
-    if (showingAd) return;
-
-    // If ad is ready, show it
-    if (adReady) {
-      console.log('✅ Ad is ready, showing ad...');
-      setShowingAd(true);
-      try {
-        const success = await adRewardService.showRewardedAd();
-        console.log('Show ad result:', success);
-        if (success) {
-          // Ad will call the reward callback automatically
-          Alert.alert(t('Thank You!'), t('You earned scripting time!'));
-        } else {
-          Alert.alert(
-            t('Ad Failed'),
-            t('Could not show the ad. Please try again.'),
-          );
-        }
-      } catch (error) {
-        console.error('Error showing ad:', error);
-        Alert.alert(
-          t('Error'),
-          error instanceof Error ? error.message : t('Failed to show ad'),
-        );
-      } finally {
-        setShowingAd(false);
-      }
-      return;
-    }
-
-    // If ad is not ready, try to load it
-    console.log('🔄 Ad not ready, attempting manual load...');
-    const result = await adRewardService.manualLoadAd();
-    console.log('Manual load result:', result);
-    Alert.alert(
-      result.success ? t('Loading Ad') : t('Cannot Load Ad'),
-      t(result.messageKey, result.messageParams as Record<string, any>),
-    );
   };
 
   const removeScript = async (id: string) => {
