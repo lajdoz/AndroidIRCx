@@ -94,7 +94,7 @@ jobs:
 
       - name: Assemble debug APK
         working-directory: android
-        run: ./gradlew clean assembleDebug --no-daemon --stacktrace
+        run: bash ./gradlew clean assembleDebug --no-daemon --stacktrace
 
       - name: Find APK
         id: apk
