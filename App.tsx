@@ -42,7 +42,6 @@ import { useUIStore } from './src/stores/uiStore';
 import { useConnectionManager } from './src/hooks/useConnectionManager';
 import { useTabManager } from './src/hooks/useTabManager';
 import { useAppLock } from './src/hooks/useAppLock';
-import { useBannerAds } from './src/hooks/useBannerAds';
 import { useTabEncryption } from './src/hooks/useTabEncryption';
 import { useUISettings } from './src/hooks/useUISettings';
 import { useConnectionLifecycle } from './src/hooks/useConnectionLifecycle';
@@ -143,7 +142,7 @@ const ageComplianceStyles = StyleSheet.create({
 });
 
 function App() {
-  // Initialize Firebase App Check, consent management, AdMob, and error reporting
+  // Initialize Firebase App Check, privacy consent, and error reporting
   useAppInitialization();
   const ageCompliance = useAgeCompliance();
 
@@ -216,7 +215,6 @@ function AppContent() {
     appLockEnabled,
     appLockUseBiometric,
     appLocked,
-    bannerVisible,
   } = uiState;
 
   // Get all store setters from hook
@@ -397,7 +395,6 @@ function AppContent() {
   }, [attemptBiometricUnlock, t]);
 
   // Banner ad lifecycle management (scripting time, ad-free time, show/hide cycle)
-  useBannerAds();
 
   // Tab encryption state synchronization (reconcile flags with stored keys, "always encrypt" settings)
   useTabEncryption({ isConnected, setTabs, tabsRef });
@@ -874,7 +871,6 @@ function AppContent() {
         showEncryptionIndicators={showEncryptionIndicators}
         showTypingIndicators={showTypingIndicators}
         typingUsers={typingUsers}
-        bannerVisible={bannerVisible}
         prefillMessage={prefillMessage}
         layoutConfig={layoutConfig}
         sideTabsVisible={sideTabsVisible}
