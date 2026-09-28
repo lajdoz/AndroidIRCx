@@ -881,14 +881,8 @@ export const ScriptingScreen: React.FC<Props> = ({
               </Text>
             </View>
           )}
-          <View
-            style={[
-              styles.warningBox,
-              { backgroundColor: '#2196F3' + '20' },
-              accentBlueBorderStyle,
-            ]}
-          >
-            <Text style={[styles.warningText, accentBlueTextStyle]}>
+          <View style={styles.warningBox}>
+            <Text style={styles.warningText}>
               {t(
                 'Scripts run with full access to your local IRC data. Only install scripts you trust and avoid running scripts from unknown sources.',
               )}
