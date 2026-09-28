@@ -574,9 +574,7 @@ export function AppLayout({
       enabled={keyboardViewEnabled}
       keyboardVerticalOffset={keyboardVerticalOffset}
       style={[styles.container, { paddingTop: safeAreaInsets.top }]}
-    >
-      {bannerPosition === 'tabs_above' && bannerNode}
-      <HeaderBar
+    >      <HeaderBar
         networkName={
           isConnected ? networkName : selectedNetworkName || networkName
         }
@@ -609,9 +607,7 @@ export function AppLayout({
         onToggleSideTabs={onToggleSideTabs}
         showSearchButton={showSearchButton}
         onSearchPress={() => setSearchVisible(prev => !prev)}
-      />
-      {bannerPosition === 'tabs_below' && bannerNode}
-      {effectiveLayoutConfig.tabPosition === 'top' && (
+      />      {effectiveLayoutConfig.tabPosition === 'top' && (
         <ChannelTabs
           tabs={tabs}
           activeTabId={activeTabId}
@@ -721,9 +717,7 @@ export function AppLayout({
           showEncryptionIndicators={showEncryptionIndicators}
           position="bottom"
         />
-      )}
-      {bannerPosition === 'input_above' && bannerNode}
-      <MessageInput
+      )}      <MessageInput
         placeholder="Enter a message"
         onSubmit={handleSendMessage}
         disabled={!activeTab}
@@ -734,8 +728,6 @@ export function AppLayout({
         tabName={activeTab?.name}
         network={activeTab?.networkId}
         tabId={activeTab?.id}
-      />
-      {bannerPosition === 'input_below' && bannerNode}
-    </KeyboardAvoidingView>
+      />    </KeyboardAvoidingView>
   );
 }
