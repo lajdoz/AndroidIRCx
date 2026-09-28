@@ -168,15 +168,7 @@ export const ScriptingScreen: React.FC<Props> = ({
     marginTop: 4,
     fontStyle: 'italic' as const,
   };
-  const fallbackSubtitleStyle = {
-    marginBottom: 8,
-    fontStyle: 'italic' as const,
-  };
   const spacerStyle = { width: 16 };
-  const accentBlueBorderStyle = { borderLeftColor: '#2196F3' };
-  const accentBlueTextStyle = { color: '#2196F3' };
-  const accentOrangeBorderStyle = { borderLeftColor: '#FF9800' };
-  const accentOrangeTextStyle = { color: '#FF9800' };
   const [scripts, setScripts] = useState<ScriptConfig[]>([]);
   const [loggingEnabled, setLoggingEnabled] = useState<boolean>(
     scriptingService.isLoggingEnabled(),
@@ -866,38 +858,7 @@ export const ScriptingScreen: React.FC<Props> = ({
                 style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] }}
               />
             </View>
-            {adUnitType === 'Fallback' && (
-              <Text style={[styles.subtitle, fallbackSubtitleStyle]}>
-                {t('Using fallback ad unit')}
-              </Text>
-            )}
-            {/* Watch Ad button - always show for normal users, configurable for premium */}
-            <TouchableOpacity
-              style={[
-                styles.watchAdButton,
-                showingAd && styles.watchAdButtonDisabled,
-              ]}
-              onPress={handleWatchAd}
-              disabled={showingAd}
-            >
-              {showingAd ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.watchAdButtonText}>
-                  {adReady
-                    ? t('Watch Ad (+60 min Scripting & No-Ads)')
-                    : adCooldown
-                      ? t('Cooldown ({cooldownSeconds}s)').replace(
-                          '{cooldownSeconds}',
-                          cooldownSeconds.toString(),
-                        )
-                      : adLoading
-                        ? t('Loading Ad...')
-                        : t('Request Ad')}
-                </Text>
-              )}
-            </TouchableOpacity>
-            {!hasUnlimitedScripting && onShowPurchaseScreen && (
+           {!hasUnlimitedScripting && onShowPurchaseScreen && (
               <TouchableOpacity
                 style={[styles.upgradeButton]}
                 onPress={() => {
@@ -915,38 +876,8 @@ export const ScriptingScreen: React.FC<Props> = ({
             <View style={styles.warningBox}>
               <Text style={styles.warningText}>
                 {t(
-                  'No scripting time available. Watch an ad to gain 60 minutes of scripting time and no-ads. Scripts will be automatically disabled when time runs out.',
+                  'No scripting time available. Purchase Unlimited Scripting to continue.',
                 )}
-              </Text>
-            </View>
-          )}
-          {!adReady && !adLoading && !adCooldown && (
-            <View
-              style={[
-                styles.warningBox,
-                { backgroundColor: '#2196F3' + '20' },
-                accentBlueBorderStyle,
-              ]}
-            >
-              <Text style={[styles.warningText, accentBlueTextStyle]}>
-                {t(
-                  'Tap "Request Ad" to load an ad from Google. First load may take a few moments.',
-                )}
-              </Text>
-            </View>
-          )}
-          {adCooldown && (
-            <View
-              style={[
-                styles.warningBox,
-                { backgroundColor: '#FF9800' + '20' },
-                accentOrangeBorderStyle,
-              ]}
-            >
-              <Text style={[styles.warningText, accentOrangeTextStyle]}>
-                {t(
-                  'Ads temporarily unavailable. The app works fine without them. Retrying in {cooldownSeconds}s...',
-                ).replace('{cooldownSeconds}', cooldownSeconds.toString())}
               </Text>
             </View>
           )}
