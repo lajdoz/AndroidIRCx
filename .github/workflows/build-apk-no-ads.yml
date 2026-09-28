@@ -54,11 +54,18 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
 
       - name: Install Android SDK components
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager             "platform-tools"             "platforms;android-${ANDROID_API}"             "build-tools;${ANDROID_BUILD_TOOLS}"             "ndk;${ANDROID_NDK}"             "cmake;3.22.1"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${ANDROID_NDK}" \
+            "cmake;3.22.1"
 
       - name: Restore google-services.json from secret
         shell: bash
