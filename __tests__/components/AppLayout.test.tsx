@@ -13,13 +13,6 @@ const mockMessageInput = jest.fn(() => null);
 const mockTypingIndicator = jest.fn(() => null);
 const mockUserList = jest.fn(() => null);
 const mockHeaderBar = jest.fn(() => null);
-const mockBannerAd = jest.fn(() => null);
-
-const mockUseTheme = jest.fn();
-const mockUseUIStore = jest.fn();
-const mockGetSetting = jest.fn();
-const mockOnSettingChange = jest.fn();
-const mockGetBannerAdUnitId = jest.fn();
 const mockCanShowPersonalizedAds = jest.fn();
 const settingListeners = new Map<string, (value: any) => void>();
 
@@ -59,13 +52,6 @@ jest.mock('../../src/services/SettingsService', () => ({
   settingsService: {
     getSetting: (...args: unknown[]) => mockGetSetting(...args),
     onSettingChange: (...args: unknown[]) => mockOnSettingChange(...args),
-  },
-}));
-
-jest.mock('../../src/services/BannerAdService', () => ({
-  bannerAdService: {
-    getBannerAdUnitId: () => mockGetBannerAdUnitId(),
-    canShowPersonalizedAds: () => mockCanShowPersonalizedAds(),
   },
 }));
 
@@ -151,8 +137,6 @@ const baseProps = {
   useAndroidBottomSafeArea: true,
   styles: {
     container: {},
-    bannerAdContainer: {},
-    bannerAdHidden: {},
     contentArea: {},
     contentAreaRow: {},
     messageAndUser: {},
@@ -202,7 +186,6 @@ describe('AppLayout', () => {
         return () => settingListeners.delete(key);
       },
     );
-    mockGetBannerAdUnitId.mockReturnValue('test-banner-id');
     mockCanShowPersonalizedAds.mockReturnValue(true);
   });
 
@@ -482,36 +465,6 @@ describe('AppLayout', () => {
     expect(handleToggleUserList).toHaveBeenCalled();
   });
 
-  it('passes non-personalized ad request option when personalization disabled', async () => {
-    mockCanShowPersonalizedAds.mockReturnValue(false);
-    await render(<AppLayout {...baseProps} />);
-
-    expect(mockBannerAd).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestOptions: expect.objectContaining({
-          requestNonPersonalizedAdsOnly: true,
-        }),
-      }),
-    );
-  });
-
-  it('reacts to settings change listeners for swipe and banner position', async () => {
-    await render(<AppLayout {...baseProps} />);
-
-    await act(async () => {
-      settingListeners.get('swipeBehavior')?.('show-panels');
-      settingListeners.get('channelListScrollSwitchTabsInverse')?.(true);
-      settingListeners.get('bannerPosition')?.('tabs_below');
-      settingListeners.get('nicklistTongueEnabled')?.(false);
-      settingListeners.get('nicklistTongueSizePx')?.(72);
-    });
-
-    expect(settingListeners.has('swipeBehavior')).toBe(true);
-    expect(settingListeners.has('bannerPosition')).toBe(true);
-    expect(settingListeners.has('nicklistTongueEnabled')).toBe(true);
-    expect(settingListeners.has('adaptiveLayoutEnabled')).toBe(true);
-  });
-
   it('executes swipe pan handlers for switch-tabs and show-panels behaviors', async () => {
     const capturedConfigs: any[] = [];
     const panSpy = jest
@@ -617,22 +570,3 @@ describe('AppLayout', () => {
     expect(setShowUserList).toHaveBeenCalled();
     panSpy.mockRestore();
   });
-
-  it('invokes header connect callback and banner load error handler', async () => {
-    const consoleSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    const handleConnect = jest.fn();
-    await render(<AppLayout {...baseProps} handleConnect={handleConnect} />);
-
-    const headerProps = mockHeaderBar.mock.calls[0][0];
-    headerProps.onConnectPress();
-    expect(handleConnect).toHaveBeenCalled();
-
-    const bannerProps = mockBannerAd.mock.calls[0][0];
-    expect(() =>
-      bannerProps.onAdFailedToLoad(new Error('ad-fail')),
-    ).not.toThrow();
-    consoleSpy.mockRestore();
-  });
-});

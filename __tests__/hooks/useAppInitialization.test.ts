@@ -9,17 +9,6 @@ import { renderHook } from '@testing-library/react-native';
 import { useAppInitialization } from '../../src/hooks/useAppInitialization';
 
 // Mock all the services and modules used in the hook
-jest.mock('@react-native-firebase/app-check', () => ({
-  initializeAppCheck: jest.fn(),
-  ReactNativeFirebaseAppCheckProvider: jest.fn().mockImplementation(() => ({
-    configure: jest.fn(),
-  })),
-}));
-
-jest.mock('@react-native-firebase/app', () => ({
-  getApp: jest.fn(),
-}));
-
 jest.mock('react-native-google-mobile-ads', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -29,13 +18,6 @@ jest.mock('react-native-google-mobile-ads', () => ({
 
 jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn().mockResolvedValue(undefined),
-}));
-
-jest.mock('../../src/services/ConsentService', () => ({
-  consentService: {
-    initialize: jest.fn().mockResolvedValue(undefined),
-    showConsentFormIfRequired: jest.fn().mockResolvedValue(undefined),
-  },
 }));
 
 jest.mock('../../src/services/SettingsService', () => ({
@@ -52,12 +34,6 @@ jest.mock('../../src/services/AdRewardService', () => ({
 
 jest.mock('../../src/services/InAppPurchaseService', () => ({
   inAppPurchaseService: {
-    initialize: jest.fn().mockResolvedValue(undefined),
-  },
-}));
-
-jest.mock('../../src/services/BannerAdService', () => ({
-  bannerAdService: {
     initialize: jest.fn().mockResolvedValue(undefined),
   },
 }));
@@ -139,38 +115,6 @@ describe('useAppInitialization', () => {
     ).toHaveBeenCalled();
   });
 
-  it('should handle consent form based on first run status', async () => {
-    // Mock first run as false to trigger consent form
-    require('../../src/services/SettingsService').settingsService.isFirstRun.mockResolvedValue(
-      false,
-    );
-
-    await renderHook(() => useAppInitialization());
-
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(
-      require('../../src/services/ConsentService').consentService
-        .showConsentFormIfRequired,
-    ).toHaveBeenCalled();
-  });
-
-  it('should skip consent form on first run', async () => {
-    // Mock first run as true (default)
-    require('../../src/services/SettingsService').settingsService.isFirstRun.mockResolvedValue(
-      true,
-    );
-
-    await renderHook(() => useAppInitialization());
-
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(
-      require('../../src/services/ConsentService').consentService
-        .showConsentFormIfRequired,
-    ).not.toHaveBeenCalled();
-  });
-
   it('should set global error handler', async () => {
     await renderHook(() => useAppInitialization());
 
@@ -237,18 +181,6 @@ describe('useAppInitialization', () => {
     await renderHook(() => useAppInitialization());
   });
 
-  it('should initialize Firebase App Check', async () => {
-    await renderHook(() => useAppInitialization());
-
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    // Check that Firebase app is retrieved and App Check is initialized
-    expect(require('@react-native-firebase/app').getApp).toHaveBeenCalled();
-    expect(
-      require('@react-native-firebase/app-check').initializeAppCheck,
-    ).toHaveBeenCalled();
-  });
-
   it('should skip global error handler setup when ErrorUtils is unavailable', async () => {
     const originalErrorUtils = (global as any).ErrorUtils;
     delete (global as any).ErrorUtils;
@@ -262,28 +194,6 @@ describe('useAppInitialization', () => {
     ).toHaveBeenCalled();
 
     (global as any).ErrorUtils = originalErrorUtils;
-  });
-
-  it('should handle App Check initialization failure gracefully', async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    // v26 initializeAppCheck is synchronous — it throws rather than rejecting.
-    require('@react-native-firebase/app-check').initializeAppCheck.mockImplementationOnce(
-      () => {
-        throw new Error('app-check failed');
-      },
-    );
-
-    await renderHook(() => useAppInitialization());
-
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '❌ App Check initialization failed:',
-      expect.any(Error),
-    );
-    consoleErrorSpy.mockRestore();
   });
 
   it('should handle PrivacyRelay initialization failures gracefully', async () => {
@@ -304,22 +214,3 @@ describe('useAppInitialization', () => {
     );
     consoleErrorSpy.mockRestore();
   });
-
-  it('should warn when not all ad adapters are ready', async () => {
-    const consoleWarnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {});
-    require('react-native-google-mobile-ads').default.mockReturnValue({
-      initialize: jest.fn().mockResolvedValue([{ state: 0 }]),
-    });
-
-    await renderHook(() => useAppInitialization());
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      '⚠️ WARNING: Not all ad adapters are ready!',
-    );
-    expect(consoleWarnSpy).toHaveBeenCalledWith('This could be due to:');
-    consoleWarnSpy.mockRestore();
-  });
-});

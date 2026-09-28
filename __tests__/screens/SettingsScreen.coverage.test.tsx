@@ -279,39 +279,6 @@ jest.mock('../../src/screens/AboutScreen', () => ({
 jest.mock('../../src/screens/CreditsScreen', () => ({
   CreditsScreen: passthroughScreen('Credits'),
 }));
-jest.mock('../../src/screens/PrivacyAdsScreen', () => ({
-  PrivacyAdsScreen: passthroughScreen('PrivacyAds'),
-}));
-jest.mock('../../src/screens/DataPrivacyScreen', () => ({
-  DataPrivacyScreen: passthroughScreen('DataPrivacy'),
-}));
-jest.mock('../../src/screens/MessageHistoryViewerScreen', () => ({
-  MessageHistoryViewerScreen: passthroughScreen('MessageHistoryViewer'),
-}));
-jest.mock('../../src/screens/ZncSubscriptionScreen', () => ({
-  ZncSubscriptionScreen: passthroughScreen('ZncSubscription'),
-}));
-jest.mock('../../src/screens/PrivacyRelayScreen', () => ({
-  PrivacyRelayScreen: passthroughScreen('PrivacyRelay'),
-}));
-jest.mock('../../src/screens/BackupScreen', () => ({
-  BackupScreen: passthroughScreen('BackupScreen'),
-}));
-jest.mock('../../src/hooks/useIapConnectionLease', () => ({
-  useIapConnectionLease: () => ({
-    ensureIapConnection: jest.fn().mockResolvedValue(undefined),
-    releaseIapConnection: jest.fn(),
-  }),
-}));
-jest.mock('../../src/stores/uiStore', () => ({
-  useUIStore: {
-    getState: jest.fn(() => ({
-      setShowSettings: jest.fn(),
-      setShowNetworksList: jest.fn(),
-    })),
-  },
-}));
-
 const { SettingsScreen } = jest.requireActual(
   '../../src/screens/SettingsScreen',
 );

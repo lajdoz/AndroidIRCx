@@ -29,15 +29,9 @@ jest.mock('../../src/i18n/localization', () => ({
 }));
 
 jest.mock('../../src/services/InAppPurchaseService', () => ({
-  PRODUCT_REMOVE_ADS: 'remove_ads',
   PRODUCT_PRO_UNLIMITED: 'pro_unlimited',
   PRODUCT_SUPPORTER_PRO: 'supporter_pro',
   PRODUCT_CATALOG: {
-    remove_ads: {
-      title: 'Remove Ads',
-      description: 'No more ads',
-      features: ['Ad-free'],
-    },
     pro_unlimited: {
       title: 'Pro Unlimited',
       description: 'All features',
@@ -83,7 +77,6 @@ describe('PurchaseScreen', () => {
 
     mockRNIap.initConnection.mockResolvedValue(undefined);
     mockRNIap.fetchProducts.mockResolvedValue([
-      { id: 'remove_ads', displayPrice: '$1.99', price: 1.99 },
       { id: 'pro_unlimited', displayPrice: '$4.99', price: 4.99 },
       { id: 'supporter_pro', displayPrice: '$9.99', price: 9.99 },
     ]);
@@ -149,7 +142,7 @@ describe('PurchaseScreen', () => {
     } = require('../../src/services/InAppPurchaseService');
     mockRNIap.getAvailablePurchases.mockResolvedValue([
       {
-        productId: 'remove_ads',
+        productId: 'pro_unlimited',
         transactionReceipt: 'receipt-1',
         purchaseToken: 'token-1',
       },
@@ -163,7 +156,7 @@ describe('PurchaseScreen', () => {
 
     await waitFor(async () => {
       expect(inAppPurchaseService.processPurchase).toHaveBeenCalledWith(
-        'remove_ads',
+        'pro_unlimited',
         'token-1',
       );
     });
@@ -207,7 +200,7 @@ describe('PurchaseScreen', () => {
       inAppPurchaseService,
     } = require('../../src/services/InAppPurchaseService');
     inAppPurchaseService.hasPurchased.mockImplementation(
-      (productId: string) => productId === 'remove_ads',
+      (productId: string) => productId === 'pro_unlimited',
     );
 
     const { findByText, queryAllByText } = await render(
@@ -230,7 +223,7 @@ describe('PurchaseScreen', () => {
 
     await act(async () => {
       await purchaseUpdatedHandler?.({
-        productId: 'remove_ads',
+        productId: 'pro_unlimited',
         transactionReceipt: 'receipt-123',
         purchaseToken: 'token-123',
       });
@@ -238,7 +231,7 @@ describe('PurchaseScreen', () => {
 
     expect(mockRNIap.finishTransaction).toHaveBeenCalled();
     expect(inAppPurchaseService.processPurchase).toHaveBeenCalledWith(
-      'remove_ads',
+      'pro_unlimited',
       'token-123',
     );
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -262,7 +255,7 @@ describe('PurchaseScreen', () => {
 
     await act(async () => {
       await purchaseUpdatedHandler?.({
-        productId: 'remove_ads',
+        productId: 'pro_unlimited',
         transactionReceipt: 'receipt-123',
         purchaseToken: 'token-123',
       });

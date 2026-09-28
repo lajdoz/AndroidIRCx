@@ -20,8 +20,6 @@ const mockGetSetting = jest.fn(async (_key: string, def: any) => def);
 const mockSetBackgroundEnabled = jest.fn(async () => undefined);
 const mockHandleBatteryOptimization = jest.fn(async () => undefined);
 const mockIsBatteryOptimizationEnabled = jest.fn(async () => false);
-const mockSetWatchAdButtonEnabledForPremium = jest.fn(async () => undefined);
-const mockHandleWatchAd = jest.fn();
 const mockUIStore = {
   setShowHelpConnection: jest.fn(),
   setShowHelpCommands: jest.fn(),
@@ -92,16 +90,6 @@ jest.mock('../../../src/hooks/useSettingsPremium', () => ({
     hasNoAds: false,
     hasScriptingPro: false,
     isSupporter: false,
-    watchAdButtonEnabledForPremium: false,
-    showWatchAdButton: true,
-    adReady: true,
-    adLoading: false,
-    adCooldown: false,
-    cooldownSeconds: 0,
-    showingAd: false,
-    setWatchAdButtonEnabledForPremium: (...args: any[]) =>
-      mockSetWatchAdButtonEnabledForPremium(...args),
-    handleWatchAd: (...args: any[]) => mockHandleWatchAd(...args),
   }),
 }));
 
@@ -142,9 +130,6 @@ const styles = {
   disabledItem: {},
   disabledText: {},
   chevron: {},
-  watchAdButton: {},
-  watchAdButtonDisabled: {},
-  watchAdButtonText: {},
 };
 
 describe('Settings Sections Basic', () => {
@@ -185,7 +170,6 @@ describe('Settings Sections Basic', () => {
   it('Premium and Privacy sections trigger actions', async () => {
     const onShowPurchaseScreen = jest.fn();
     const onShowDataPrivacy = jest.fn();
-    const onShowPrivacyAds = jest.fn();
     const { getByTestId } = await render(
       <>
         <PremiumSection
@@ -199,16 +183,13 @@ describe('Settings Sections Basic', () => {
           styles={styles as any}
           settingIcons={{}}
           onShowDataPrivacy={onShowDataPrivacy}
-          onShowPrivacyAds={onShowPrivacyAds}
         />
       </>,
     );
     await fireEvent.press(getByTestId('setting-premium-upgrade'));
     await fireEvent.press(getByTestId('setting-my-data-privacy'));
-    await fireEvent.press(getByTestId('setting-privacy-ads'));
     expect(onShowPurchaseScreen).toHaveBeenCalled();
     expect(onShowDataPrivacy).toHaveBeenCalled();
-    expect(onShowPrivacyAds).toHaveBeenCalled();
   });
 
   it('MessageHistorySection saves input/switch updates', async () => {
@@ -253,10 +234,10 @@ describe('Settings Sections Basic', () => {
     jest.useRealTimers();
   });
 
-  it('ScriptingAdsSection exposes watch-ad flow', async () => {
+  it('ScriptingAdsSection exposes scripting and help flows', async () => {
     const onShowScripting = jest.fn();
     const onShowScriptingHelp = jest.fn();
-    const { getByText } = await render(
+    const { getByTestId } = await render(
       <ScriptingAdsSection
         colors={colors}
         styles={styles as any}
@@ -266,11 +247,11 @@ describe('Settings Sections Basic', () => {
       />,
     );
 
-    await mockCapturedItems.get('watch-ad-button-premium').onValueChange(true);
-    await fireEvent.press(getByText('Watch Ad (+60 min Scripting & No-Ads)'));
+    await fireEvent.press(getByTestId('setting-advanced-scripts'));
+    await fireEvent.press(getByTestId('setting-advanced-scripts-help'));
 
-    expect(mockSetWatchAdButtonEnabledForPremium).toHaveBeenCalledWith(true);
-    expect(mockHandleWatchAd).toHaveBeenCalled();
+    expect(onShowScripting).toHaveBeenCalled();
+    expect(onShowScriptingHelp).toHaveBeenCalled();
   });
 
   it('HelpSection opens correct help dialogs', async () => {

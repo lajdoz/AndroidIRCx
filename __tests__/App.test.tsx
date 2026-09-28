@@ -276,10 +276,6 @@ jest.mock('../src/hooks/useAppLock', () => ({
   }),
 }));
 
-jest.mock('../src/hooks/useBannerAds', () => ({
-  useBannerAds: jest.fn(),
-}));
-
 jest.mock('../src/hooks/useTabEncryption', () => ({
   useTabEncryption: jest.fn(),
 }));
