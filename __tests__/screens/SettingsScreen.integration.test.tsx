@@ -440,6 +440,70 @@ jest.mock('../../src/screens/CreditsScreen', () => ({
     ) : null;
   },
 }));
+jest.mock('../../src/screens/DataPrivacyScreen', () => ({
+  DataPrivacyScreen: ({ visible, onClose }: any) => {
+    const { Text } = require('react-native');
+    return visible ? (
+      <>
+        <Text>DataPrivacyScreenMock</Text>
+        <Text onPress={() => onClose?.()}>DataPrivacyClose</Text>
+      </>
+    ) : null;
+  },
+}));
+jest.mock('../../src/screens/MessageHistoryViewerScreen', () => ({
+  MessageHistoryViewerScreen: ({ visible, onClose }: any) => {
+    const { Text } = require('react-native');
+    return visible ? (
+      <>
+        <Text>MessageHistoryViewerScreenMock</Text>
+        <Text onPress={() => onClose?.()}>MessageHistoryViewerClose</Text>
+      </>
+    ) : null;
+  },
+}));
+jest.mock('../../src/screens/ZncSubscriptionScreen', () => ({
+  ZncSubscriptionScreen: ({ visible, onClose }: any) => {
+    const { Text } = require('react-native');
+    return visible ? (
+      <>
+        <Text>ZncSubscriptionScreenMock</Text>
+        <Text onPress={() => onClose?.()}>ZncSubscriptionClose</Text>
+      </>
+    ) : null;
+  },
+}));
+jest.mock('../../src/screens/PrivacyRelayScreen', () => ({
+  PrivacyRelayScreen: ({ visible, onClose }: any) => {
+    const { Text } = require('react-native');
+    return visible ? (
+      <>
+        <Text>PrivacyRelayScreenMock</Text>
+        <Text onPress={() => onClose?.()}>PrivacyRelayClose</Text>
+      </>
+    ) : null;
+  },
+}));
+jest.mock('../../src/screens/BackupScreen', () => ({
+  BackupScreen: ({ visible, onClose }: any) => {
+    const { Text } = require('react-native');
+    return visible ? (
+      <>
+        <Text>BackupScreenMock</Text>
+        <Text onPress={() => onClose?.()}>BackupScreenClose</Text>
+      </>
+    ) : null;
+  },
+}));
+jest.mock('../../src/stores/uiStore', () => ({
+  useUIStore: {
+    getState: jest.fn(() => ({
+      setShowSettings: jest.fn(),
+      setShowNetworksList: jest.fn(),
+    })),
+  },
+}));
+
 // Import SettingsScreen after mocks
 const { SettingsScreen } = jest.requireActual(
   '../../src/screens/SettingsScreen',
