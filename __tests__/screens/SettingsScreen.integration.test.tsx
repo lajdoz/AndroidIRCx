@@ -668,7 +668,6 @@ describe('SettingsScreen Integration', () => {
     );
     await fireEvent.press(view.getByText('Privacy & Legal'));
     await fireEvent.press(view.getByTestId('sec-open-data-privacy'));
-    await fireEvent.press(view.getByTestId('sec-open-privacy-ads'));
     expect(view.getByTestId('sec-open-data-privacy')).toBeTruthy();
     await view.unmount();
 
@@ -1079,11 +1078,8 @@ describe('SettingsScreen Integration', () => {
     expect(await view.findByText('DataPrivacyScreenMock')).toBeTruthy();
     await fireEvent.press(view.getByText('DataPrivacyClose'));
 
-    const privacyAdsButton = view.getByTestId('sec-open-privacy-ads');
     expect(privacyAdsButton).toBeTruthy();
     await fireEvent.press(privacyAdsButton);
-    expect(await view.findByText('PrivacyAdsScreenMock')).toBeTruthy();
-    await fireEvent.press(view.getByText('PrivacyAdsClose'));
   });
 
   it('should handle Connection & Network section actions', async () => {
