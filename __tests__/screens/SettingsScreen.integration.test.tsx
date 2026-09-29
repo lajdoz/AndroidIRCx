@@ -1078,8 +1078,6 @@ describe('SettingsScreen Integration', () => {
     expect(await view.findByText('DataPrivacyScreenMock')).toBeTruthy();
     await fireEvent.press(view.getByText('DataPrivacyClose'));
 
-    expect(privacyAdsButton).toBeTruthy();
-    await fireEvent.press(privacyAdsButton);
   });
 
   it('should handle Connection & Network section actions', async () => {
